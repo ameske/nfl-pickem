@@ -35,7 +35,7 @@ func (db Datastore) games(year int, minWeek int, maxWeek int) ([]api.Game, error
 		var tmp api.Game
 		var d int64
 
-		err := rows.Scan(&tmp.Year, &tmp.Week, &d, &tmp.HomeCity, &tmp.HomeNickname, &tmp.AwayCity, &tmp.AwayNickname, &tmp.HomeScore, &tmp.AwayScore)
+		err := rows.Scan(&tmp.Year, &tmp.Week, &d, &tmp.Home.City, &tmp.Home.Nickname, &tmp.Away.City, &tmp.Away.Nickname, &tmp.HomeScore, &tmp.AwayScore)
 		if err != nil {
 			return nil, err
 		}

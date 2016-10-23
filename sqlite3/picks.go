@@ -21,7 +21,7 @@ func processPickResults(rows *sql.Rows) ([]api.Pick, error) {
 	for rows.Next() {
 		var tmp api.Pick
 		var d int64
-		err := rows.Scan(&tmp.Game.Year, &tmp.Game.Week, &tmp.Game.HomeCity, &tmp.Game.HomeNickname, &tmp.Game.AwayCity, &tmp.Game.AwayNickname, &d, &tmp.Game.HomeScore, &tmp.Game.AwayScore,
+		err := rows.Scan(&tmp.Game.Year, &tmp.Game.Week, &tmp.Game.Home.City, &tmp.Game.Home.Nickname, &tmp.Game.Away.City, &tmp.Game.Away.Nickname, &d, &tmp.Game.HomeScore, &tmp.Game.AwayScore,
 			&tmp.Selection.City, &tmp.Selection.Nickname,
 			&tmp.Points,
 			&tmp.User.FirstName, &tmp.User.LastName, &tmp.User.Email)

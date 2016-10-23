@@ -11,15 +11,13 @@ import (
 
 // Game represents an NFL contest.
 type Game struct {
-	Year         int
-	Week         int
-	Date         time.Time
-	HomeCity     string
-	HomeNickname string
-	HomeScore    int
-	AwayCity     string
-	AwayNickname string
-	AwayScore    int
+	Year      int       `json:"year"`
+	Week      int       `json:"week"`
+	Date      time.Time `json:"date"`
+	Home      Team      `json:"home"`
+	Away      Team      `json:"away"`
+	HomeScore int       `json:"homeScore"`
+	AwayScore int       `json:"awayScore"`
 }
 
 // GamesRetriever is the interface implemented by a type that can retrieve NFL game

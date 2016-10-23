@@ -2,16 +2,13 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/ameske/nfl-pickem/jsonhttp"
-)
-
-const (
-	SELECTION_AWAY = 1
-	SELECTION_HOME = 2
 )
 
 // A Pick represents a user's selection for a given game.
@@ -24,8 +21,8 @@ type Pick struct {
 	Points    int  `json:"points"`
 }
 
-// Picker is the interface implemented by types that can retrieve Pick information
-type Picker interface {
+// PickRetriever is the interface implemented by types that can retrieve Pick information
+type PickRetriever interface {
 	Picks(username string, year int, week int) ([]Pick, error)
 	SelectedPicks(username string, year int, week int) ([]Pick, error)
 }
@@ -34,7 +31,7 @@ type Picker interface {
 //
 // Using the "kind" parameters it is possible to specify that all picks
 // should be returned, or only selected picks.
-func GetPicks(db Picker) http.HandlerFunc {
+func GetPicks(db PickRetriever) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		yearStr := r.FormValue("year")
 		year, err := strconv.Atoi(yearStr)
@@ -77,27 +74,38 @@ func GetPicks(db Picker) http.HandlerFunc {
 
 // A Selection represents a completed pick by a user.
 //
-// The set of (year, week, selection) is enough to uniquely identify the backing pick.
+// The selection field is the nickname of the given team. This is enough to uniquely identify the game.
+//
+// The set of (username, year, week, selection) is enough to uniquely identify the backing pick if we are allowing
+// more than one user to submit picks at a time (a la an admin form of some sort).
 type Selection struct {
 	Username  string `json:"username"`
 	Year      int    `json:"year"`
 	Week      int    `json:"week"`
-	Selection string `json:"selection"`
+	Selection Team   `json:"selection"`
 	Points    int    `json:"points"`
 }
 
-const (
-	maxSeven = 1
-	maxFive  = 2
-	maxThree = 5
+var (
+	errGameLocked       = errors.New("game has already started - pick locked")
+	errUnknownSelection = errors.New("selection does not match a game in the given pick set")
 )
+
+// Picker is the interface implemented by a type that can make/update picks
+type Picker interface {
+	PickRetriever
+	MakePicks([]Pick) error
+}
 
 // MakePicks processes an array of JSON representation of pick selections.
 //
 // In the event duplicate picks for the same game are made,
 // the last pick is always the pick that is stored.
 //
-// Any picks that are locked will be ignored by the endpoint.
+// This endpoint restricts the set of picks to be for a pre-declared user,
+// declared in the URL.
+//
+// If a selection is made for a locked game, it will be ignored.
 func MakePicks(db Picker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		yearStr := r.FormValue("year")
@@ -114,8 +122,6 @@ func MakePicks(db Picker) http.HandlerFunc {
 			return
 		}
 
-		// For now we'll restrict this to one user, the selection type enables us to have multiple
-		// user picks made for admin functionality one day.
 		username := r.FormValue("username")
 		if username == "" {
 			jsonhttp.WriteError(w, http.StatusBadRequest, "username is required")
@@ -129,16 +135,92 @@ func MakePicks(db Picker) http.HandlerFunc {
 			return
 		}
 
-		// Gather the current set of picks. We'll store this in memory and manipulate
-		// this to determine if we can commit the transaction.
-		_, err = db.Picks(username, year, week)
+		picks, err := db.Picks(username, year, week)
 		if err != nil {
 			jsonhttp.WriteError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+
+		// Manipulate a represenation in memory first before we commit to the backing datastore
+		now := time.Now()
+		for i, s := range selections {
+			if s.Username != username {
+				jsonhttp.WriteError(w, http.StatusBadRequest, "selections must match the username declared in the URL parameter")
+				return
+			}
+
+			err := updateTemporaryPicks(now, s, picks)
+			if err == errGameLocked {
+				continue
+			} else if err == errUnknownSelection {
+				jsonhttp.WriteError(w, http.StatusForbidden, fmt.Sprintf("selection %d is invalid for Year %d / Week %d - unable to update", i, year, week))
+				return
+			} else {
+				jsonhttp.WriteError(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+		}
+
+		if !pickSetLegal(picks) {
+			jsonhttp.WriteError(w, http.StatusBadRequest, "resulting pick set contains too many point values")
+			return
+		}
+
+		err = db.MakePicks(picks)
+		if err != nil {
+			jsonhttp.WriteError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		jsonhttp.Write(w, picks)
 	}
 }
 
-// updatePick locates the correct pick given the selection and changes the selection and points
-func updatePick(s Selection, picks []Pick) {
+// updateTemporaryPicks locates the correct pick given the selection and changes the selection and points
+// provided that the game time is not before the provided time.
+func updateTemporaryPicks(t time.Time, s Selection, picks []Pick) error {
+	for i, p := range picks {
+		// We need to match on (year, week, home|away team) to know we can update the pick with the given selection
+		if s.Year == p.Game.Year && s.Week == p.Game.Week && (s.Selection.Nickname == p.Game.Home.Nickname || s.Selection.Nickname == p.Game.Away.Nickname) {
+			// Refuse to update the pick if the game has already started
+			if p.Game.Date.Before(t) {
+				return errGameLocked
+			}
+			picks[i].Points = s.Points
+			picks[i].Selection.City = s.Selection.City
+			picks[i].Selection.Nickname = s.Selection.Nickname
+			return nil
+		}
+	}
+
+	return errUnknownSelection
+}
+
+const (
+	maxSevens = 1
+	maxFives  = 2
+	maxThrees = 5
+)
+
+// pickSetLegal determines the legality of a set of picks, assuming that the set of
+// picks represents only one (year, week, user) set.
+func pickSetLegal(picks []Pick) bool {
+	threes := 0
+	fives := 0
+	sevens := 0
+
+	for _, p := range picks {
+		switch p.Points {
+		case 3:
+			threes++
+		case 5:
+			fives++
+		case 7:
+			sevens++
+
+		}
+
+	}
+
+	return threes <= maxThrees && fives <= maxFives && sevens <= maxSevens
 }

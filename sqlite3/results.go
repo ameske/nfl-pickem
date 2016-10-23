@@ -34,7 +34,7 @@ func (db Datastore) Results(t time.Time, year int, week int) ([]api.Result, erro
 		var pr api.PickResult
 		var d int64
 
-		err := rows.Scan(&g.Year, &g.Week, &g.HomeCity, &g.HomeNickname, &g.AwayCity, &g.AwayNickname, &d, &g.HomeScore, &g.AwayScore, &pr.Selection.City, &pr.Selection.Nickname, &pr.Points, &pr.User.FirstName, &pr.User.LastName, &pr.User.Email)
+		err := rows.Scan(&g.Year, &g.Week, &g.Home.City, &g.Home.Nickname, &g.Away.City, &g.Away.Nickname, &d, &g.HomeScore, &g.AwayScore, &pr.Selection.City, &pr.Selection.Nickname, &pr.Points, &pr.User.FirstName, &pr.User.LastName, &pr.User.Email)
 		if err != nil {
 			return nil, err
 		}
