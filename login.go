@@ -16,17 +16,18 @@ type CredentialChecker interface {
 // Login processes a login request and sets a cookie with a session handle on success
 func Login(db CredentialChecker, store sessions.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		r.ParseForm()
+		u, p, ok := r.BasicAuth()
+		if !ok {
+			jsonhttp.WriteError(w, http.StatusBadRequest, "missing credentials")
+			return
+		}
 
-		// Attempt login, taking the user back to the login page with an error message if failed
-		u := r.FormValue("username")
-		p := r.FormValue("password")
-		ok, err := db.CheckCredentials(u, p)
+		successful, err := db.CheckCredentials(u, p)
 		if err != nil {
 			log.Println(err)
 			jsonhttp.WriteError(w, http.StatusInternalServerError, "internal server error")
 			return
-		} else if !ok {
+		} else if !successful {
 			jsonhttp.WriteError(w, http.StatusUnauthorized, "invalid username/password")
 			return
 		}

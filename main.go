@@ -183,7 +183,6 @@ func main() {
 	}
 
 	var c config
-	// var store sessions.Store
 
 	if !*debug {
 		c = loadConfig(*configFile)
@@ -208,30 +207,32 @@ func main() {
 	}
 
 	/*
-			var n Notifier
-			if c.Email.Enabled {
-				n, err = NewEmailNotifier(c.Email.SMTPAddress, c.Email.Sender, c.Email.Password)
-				if err != nil {
-					n = nullNotifier{}
-				}
-
-			} else if *debug {
-				n = fsNotifier{}
-			} else {
-
+		var n Notifier
+		if c.Email.Enabled {
+			n, err = NewEmailNotifier(c.Email.SMTPAddress, c.Email.Sender, c.Email.Password)
+			if err != nil {
 				n = nullNotifier{}
 			}
 
-		store, err = configureSessionStore(c.Server.AuthKey, c.Server.EncryptKey)
-		if err != nil {
-			log.Fatal(err)
+		} else if *debug {
+			n = fsNotifier{}
+		} else {
+
+			n = nullNotifier{}
 		}
 
 		scheduleUpdates()
 	*/
 
+	store, err := configureSessionStore(c.Server.AuthKey, c.Server.EncryptKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	router := vestigo.NewRouter()
 
+	router.Get("/login", Login(db, store))
+	router.Get("/logout", Logout(store))
 	router.Get("/current", api.CurrentWeek(db))
 	router.Get("/games", api.Games(db))
 	router.Get("/picks", api.GetPicks(db))
