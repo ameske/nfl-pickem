@@ -221,8 +221,9 @@ func main() {
 			n = nullNotifier{}
 		}
 
-		scheduleUpdates()
 	*/
+
+	scheduleUpdates(db)
 
 	store, err := configureSessionStore(c.Server.AuthKey, c.Server.EncryptKey)
 	if err != nil {

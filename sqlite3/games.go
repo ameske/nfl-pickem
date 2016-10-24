@@ -48,8 +48,9 @@ func (db Datastore) games(year int, minWeek int, maxWeek int) ([]api.Game, error
 	return games, nil
 }
 
-func (db Datastore) UpdateScore(week int, year int, homeTeam string, homeScore int, awayScore int) error {
-	//sqlite3 makes this hard on us....so we have to do this in a couple of steps
+func (db Datastore) UpdateGame(week int, year int, homeTeam string, homeScore int, awayScore int) error {
+	// sqlite3 makes this hard on us by not allowing JOIN in UPDATE
+	// so we have to do this in a couple of steps
 	sql := `SELECT games.id FROM games
 		JOIN weeks ON games.week_id = weeks.id
 		JOIN years ON weeks.year_id = years.id
