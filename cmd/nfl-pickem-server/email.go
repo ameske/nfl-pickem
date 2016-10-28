@@ -9,20 +9,20 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/ameske/nfl-pickem/api"
+	"github.com/ameske/nfl-pickem"
 )
 
 type Notifier interface {
-	Notify(to string, week int, picks []api.Pick)
+	Notify(to string, week int, picks []nflpickem.Pick)
 }
 
 type nullNotifier struct{}
 
-func (n nullNotifier) Notify(to string, week int, picks []api.Pick) {}
+func (n nullNotifier) Notify(to string, week int, picks []nflpickem.Pick) {}
 
 type fsNotifier struct{}
 
-func (n fsNotifier) Notify(to string, week int, picks []api.Pick) {
+func (n fsNotifier) Notify(to string, week int, picks []nflpickem.Pick) {
 	fd, err := os.Create(fmt.Sprintf("%s-%d.txt", to, week))
 	if err != nil {
 		log.Println(err)
@@ -40,7 +40,7 @@ func (n fsNotifier) Notify(to string, week int, picks []api.Pick) {
 		From    string
 		Subject string
 		Week    int
-		Picks   []api.Pick
+		Picks   []nflpickem.Pick
 	}{
 		to, "debugserver", fmt.Sprintf("Week %d Picks", week), week, picks,
 	}
@@ -80,13 +80,13 @@ func NewEmailNotifier(server, sendAsAddress, password string) (Notifier, error) 
 	return emailNotifier{auth: a, sender: sendAsAddress, smtpServer: addr, smtpServerPort: port, et: et}, nil
 }
 
-func (e emailNotifier) Notify(to string, week int, picks []api.Pick) {
+func (e emailNotifier) Notify(to string, week int, picks []nflpickem.Pick) {
 	pe := struct {
 		To      string
 		From    string
 		Subject string
 		Week    int
-		Picks   []api.Pick
+		Picks   []nflpickem.Pick
 	}{
 		to, e.sender, fmt.Sprintf("Week %d Picks", week), week, picks,
 	}

@@ -3,18 +3,18 @@ package sqlite3
 import (
 	"time"
 
-	"github.com/ameske/nfl-pickem/api"
+	"github.com/ameske/nfl-pickem"
 )
 
-func (db Datastore) WeekGames(year int, week int) ([]api.Game, error) {
+func (db Datastore) WeekGames(year int, week int) ([]nflpickem.Game, error) {
 	return db.games(year, week, week)
 }
 
-func (db Datastore) CumulativeGames(year int, week int) ([]api.Game, error) {
+func (db Datastore) CumulativeGames(year int, week int) ([]nflpickem.Game, error) {
 	return db.games(year, 1, week)
 }
 
-func (db Datastore) games(year int, minWeek int, maxWeek int) ([]api.Game, error) {
+func (db Datastore) games(year int, minWeek int, maxWeek int) ([]nflpickem.Game, error) {
 	sql := `SELECT years.year, weeks.week, games.date, home.city, home.nickname, away.city, away.nickname, games.home_score, games.away_score
 	    FROM games
 	    JOIN teams AS home ON games.home_id = home.id
@@ -29,10 +29,10 @@ func (db Datastore) games(year int, minWeek int, maxWeek int) ([]api.Game, error
 	}
 	defer rows.Close()
 
-	games := make([]api.Game, 0)
+	games := make([]nflpickem.Game, 0)
 
 	for rows.Next() {
-		var tmp api.Game
+		var tmp nflpickem.Game
 		var d int64
 
 		err := rows.Scan(&tmp.Year, &tmp.Week, &d, &tmp.Home.City, &tmp.Home.Nickname, &tmp.Away.City, &tmp.Away.Nickname, &tmp.HomeScore, &tmp.AwayScore)
@@ -71,17 +71,17 @@ func (db Datastore) UpdateGame(week int, year int, homeTeam string, homeScore in
 }
 
 func (db Datastore) AddGame(date time.Time, homeTeam string, awayTeam string, wk17splitYear bool) error {
-	_, week, err := db.CurrentWeek(date)
+	nflWeek, err := db.CurrentWeek(date)
 	if err != nil {
 		return err
 	}
 
 	if wk17splitYear {
 		_, err = db.Exec(`INSERT INTO games(week_id, date, home_id, away_id)
-			 VALUES((SELECT weeks.id FROM weeks JOIN years ON weeks.year_id = years.id WHERE years.year = ?1 AND weeks.week = ?2), ?3, (SELECT id FROM teams WHERE nickname = ?4), (SELECT id FROM teams WHERE nickname = ?5))`, date.Year()-1, week, date.Unix(), homeTeam, awayTeam)
+			 VALUES((SELECT weeks.id FROM weeks JOIN years ON weeks.year_id = years.id WHERE years.year = ?1 AND weeks.week = ?2), ?3, (SELECT id FROM teams WHERE nickname = ?4), (SELECT id FROM teams WHERE nickname = ?5))`, date.Year()-1, nflWeek.Week, date.Unix(), homeTeam, awayTeam)
 	} else {
 		_, err = db.Exec(`INSERT INTO games(week_id, date, home_id, away_id)
-			 VALUES((SELECT weeks.id FROM weeks JOIN years ON weeks.year_id = years.id WHERE years.year = ?1 AND weeks.week = ?2), ?3, (SELECT id FROM teams WHERE nickname = ?4), (SELECT id FROM teams WHERE nickname = ?5))`, date.Year(), week, date.Unix(), homeTeam, awayTeam)
+			 VALUES((SELECT weeks.id FROM weeks JOIN years ON weeks.year_id = years.id WHERE years.year = ?1 AND weeks.week = ?2), ?3, (SELECT id FROM teams WHERE nickname = ?4), (SELECT id FROM teams WHERE nickname = ?5))`, date.Year(), nflWeek.Week, date.Unix(), homeTeam, awayTeam)
 
 	}
 

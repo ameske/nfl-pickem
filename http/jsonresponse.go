@@ -1,4 +1,4 @@
-package jsonhttp
+package http
 
 import (
 	"encoding/json"
@@ -6,13 +6,13 @@ import (
 	"net/http"
 )
 
-func Write(w http.ResponseWriter, response interface{}) {
+func WriteJSON(w http.ResponseWriter, response interface{}) {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "\t")
 
 	err := enc.Encode(response)
 	if err != nil {
-		WriteError(w, http.StatusInternalServerError, "internal server error")
+		WriteJSONError(w, http.StatusInternalServerError, "internal server error")
 	}
 }
 
@@ -21,7 +21,7 @@ type statusResponse struct {
 	Message string `json:"message"`
 }
 
-func WriteSuccess(w http.ResponseWriter, response string) {
+func WriteJSONSuccess(w http.ResponseWriter, response string) {
 	w.WriteHeader(200)
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "\t")
@@ -32,7 +32,7 @@ func WriteSuccess(w http.ResponseWriter, response string) {
 	}
 }
 
-func WriteError(w http.ResponseWriter, code int, response string) {
+func WriteJSONError(w http.ResponseWriter, code int, response string) {
 	w.WriteHeader(code)
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "\t")

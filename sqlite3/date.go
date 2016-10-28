@@ -3,6 +3,8 @@ package sqlite3
 import (
 	"database/sql"
 	"time"
+
+	"github.com/ameske/nfl-pickem"
 )
 
 const (
@@ -10,25 +12,25 @@ const (
 	seasonLength = 17
 )
 
-func (db Datastore) CurrentWeek(t time.Time) (year int, week int, err error) {
+func (db Datastore) CurrentWeek(t time.Time) (nflpickem.Week, error) {
 	/*
 		The season starts on the Tuesday before the first game.
 		To figure out what week we are in, calculate where we are from there.
 	*/
 	start, err := db.currentSeasonStart(t)
 	if err != nil {
-		return -1, -1, err
+		return nflpickem.Week{Year: -1, Week: -1}, err
 	}
 
 	d := t.Sub(start)
 
-	week = int(d/oneWeek) + 1
+	week := int(d/oneWeek) + 1
 
 	if week > seasonLength {
-		return start.Year(), -1, nil
+		return nflpickem.Week{Year: start.Year(), Week: -1}, nil
 	}
 
-	return start.Year(), week, nil
+	return nflpickem.Week{Year: start.Year(), Week: week}, nil
 }
 
 func (db Datastore) currentSeasonStart(t time.Time) (start time.Time, err error) {

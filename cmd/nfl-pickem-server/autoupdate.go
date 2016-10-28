@@ -6,17 +6,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ameske/nfl-pickem"
 	"github.com/ameske/nfl-pickem/parser/results"
 )
 
-type Updater interface {
-	CurrentWeek(t time.Time) (year int, week int, err error)
-	UpdateGame(week int, year int, homeTeam string, homeScore int, awayScore int) error
-}
-
 // scheduleUpdates sets up goroutines that will import the results of games and update the
 // picks after every wave of games completes.
-func scheduleUpdates(db Updater) {
+func scheduleUpdates(db nflpickem.Updater) {
 	// Friday at 8:00
 	go func() {
 		nextFriday := adjustIfPast(nextDay(time.Friday).Add(time.Hour * 8))
@@ -78,26 +74,26 @@ func scheduleUpdates(db Updater) {
 	}()
 }
 
-func update(db Updater, updatePreviousWeek bool) {
-	year, week, err := db.CurrentWeek(time.Now())
+func update(db nflpickem.Updater, updatePreviousWeek bool) {
+	nflWeek, err := db.CurrentWeek(time.Now())
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
 	if updatePreviousWeek {
-		week -= 1
+		nflWeek.Week -= 1
 	}
 
-	results, err := getGameResults(year, week)
+	results, err := getGameResults(nflWeek.Year, nflWeek.Week)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
 	for _, result := range results {
-		log.Println("Updating Game: %v", result)
-		err := db.UpdateGame(week, year, result.Home, result.HomeScore, result.AwayScore)
+		log.Printf("Updating Game: %v", result)
+		err := db.UpdateGame(nflWeek.Week, nflWeek.Year, result.Home, result.HomeScore, result.AwayScore)
 		if err != nil {
 			log.Println(err)
 			continue

@@ -3,11 +3,11 @@ package sqlite3
 import (
 	"time"
 
-	"github.com/ameske/nfl-pickem/api"
+	"github.com/ameske/nfl-pickem"
 )
 
 // Results are selected picks for games that started before the given time (ensuring that they are locked and users are allowed to see them)
-func (db Datastore) Results(t time.Time, year int, week int) ([]api.Result, error) {
+func (db Datastore) Results(t time.Time, year int, week int) ([]nflpickem.Result, error) {
 	sql := `SELECT years.year, weeks.week, home.city, home.nickname, away.city, away.nickname, games.date, games.home_score, games.away_score, selection.city, selection.nickname, picks.points, users.first_name, users.last_name, users.email
 		FROM picks
 		JOIN games ON picks.game_id = games.id
@@ -25,13 +25,13 @@ func (db Datastore) Results(t time.Time, year int, week int) ([]api.Result, erro
 	}
 	defer rows.Close()
 
-	seenGames := make(map[api.Game]bool)
-	results := make([]api.Result, 0)
+	seenGames := make(map[nflpickem.Game]bool)
+	results := make([]nflpickem.Result, 0)
 	current := -1
 
 	for rows.Next() {
-		var g api.Game
-		var pr api.PickResult
+		var g nflpickem.Game
+		var pr nflpickem.PickResult
 		var d int64
 
 		err := rows.Scan(&g.Year, &g.Week, &g.Home.City, &g.Home.Nickname, &g.Away.City, &g.Away.Nickname, &d, &g.HomeScore, &g.AwayScore, &pr.Selection.City, &pr.Selection.Nickname, &pr.Points, &pr.User.FirstName, &pr.User.LastName, &pr.User.Email)
@@ -44,7 +44,7 @@ func (db Datastore) Results(t time.Time, year int, week int) ([]api.Result, erro
 		if !seenGames[g] {
 			seenGames[g] = true
 			current++
-			results = append(results, api.Result{Game: g, Picks: make([]api.PickResult, 0)})
+			results = append(results, nflpickem.Result{Game: g, Picks: make([]nflpickem.PickResult, 0)})
 		}
 
 		results[current].Picks = append(results[current].Picks, pr)

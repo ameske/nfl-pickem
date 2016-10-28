@@ -1,24 +1,24 @@
 package sqlite3
 
-import "github.com/ameske/nfl-pickem/api"
+import "github.com/ameske/nfl-pickem"
 
-func (db Datastore) UserWeekTotal(username string, year int, week int) ([]api.WeekTotal, error) {
+func (db Datastore) UserWeekTotal(username string, year int, week int) ([]nflpickem.WeekTotal, error) {
 	return db.weekTotals(username, year, week, week)
 }
 
-func (db Datastore) UserWeekTotals(username string, year int, week int) ([]api.WeekTotal, error) {
+func (db Datastore) UserWeekTotals(username string, year int, week int) ([]nflpickem.WeekTotal, error) {
 	return db.weekTotals(username, year, 1, week)
 }
 
-func (db Datastore) WeekTotals(year int, week int) ([]api.WeekTotal, error) {
+func (db Datastore) WeekTotals(year int, week int) ([]nflpickem.WeekTotal, error) {
 	return db.weekTotals("%", year, week, week)
 }
 
-func (db Datastore) CumulativeWeekTotals(year int, week int) ([]api.WeekTotal, error) {
+func (db Datastore) CumulativeWeekTotals(year int, week int) ([]nflpickem.WeekTotal, error) {
 	return db.weekTotals("%", year, 1, week)
 }
 
-func (db Datastore) weekTotals(username string, year int, minWeek int, maxWeek int) ([]api.WeekTotal, error) {
+func (db Datastore) weekTotals(username string, year int, minWeek int, maxWeek int) ([]nflpickem.WeekTotal, error) {
 	sql := `SELECT users.first_name, users.last_name, users.email, years.year, weeks.week, SUM(picks.points)
 		FROM picks
 		JOIN users ON picks.user_id = users.id
@@ -33,10 +33,10 @@ func (db Datastore) weekTotals(username string, year int, minWeek int, maxWeek i
 	}
 	defer rows.Close()
 
-	totals := make([]api.WeekTotal, 0)
+	totals := make([]nflpickem.WeekTotal, 0)
 
 	for rows.Next() {
-		var tmp api.WeekTotal
+		var tmp nflpickem.WeekTotal
 		err := rows.Scan(&tmp.User.FirstName, &tmp.User.LastName, &tmp.User.Email, &tmp.Year, &tmp.Week, &tmp.Total)
 		if err != nil {
 			return nil, err
