@@ -1,0 +1,18 @@
+INSERT INTO years (year, year_start) VALUES (2016, 1473120000);
+INSERT INTO weeks (year_id, pvs_id, week) VALUES ((SELECT id FROM years WHERE year = 2016), (SELECT id FROM pvs WHERE type = 'A'), 1);
+INSERT INTO weeks (year_id, pvs_id, week) VALUES ((SELECT id FROM years WHERE year = 2016), (SELECT id FROM pvs WHERE type = 'A'), 2);
+INSERT INTO weeks (year_id, pvs_id, week) VALUES ((SELECT id FROM years WHERE year = 2016), (SELECT id FROM pvs WHERE type = 'A'), 3); 
+INSERT INTO weeks (year_id, pvs_id, week) VALUES ((SELECT id FROM years WHERE year = 2016), (SELECT id FROM pvs WHERE type = 'B'), 4); 
+INSERT INTO weeks (year_id, pvs_id, week) VALUES ((SELECT id FROM years WHERE year = 2016), (SELECT id FROM pvs WHERE type = 'C'), 5);
+INSERT INTO weeks (year_id, pvs_id, week) VALUES ((SELECT id FROM years WHERE year = 2016), (SELECT id FROM pvs WHERE type = 'B'), 6);
+INSERT INTO weeks (year_id, pvs_id, week) VALUES ((SELECT id FROM years WHERE year = 2016), (SELECT id FROM pvs WHERE type = 'B'), 7); 
+INSERT INTO weeks (year_id, pvs_id, week) VALUES ((SELECT id FROM years WHERE year = 2016), (SELECT id FROM pvs WHERE type = 'D'), 8);
+INSERT INTO weeks (year_id, pvs_id, week) VALUES ((SELECT id FROM years WHERE year = 2016), (SELECT id FROM pvs WHERE type = 'D'), 9); 
+INSERT INTO weeks (year_id, pvs_id, week) VALUES ((SELECT id FROM years WHERE year = 2016), (SELECT id FROM pvs WHERE type = 'B'), 10);
+INSERT INTO weeks (year_id, pvs_id, week) VALUES ((SELECT id FROM years WHERE year = 2016), (SELECT id FROM pvs WHERE type = 'B'), 11); 
+INSERT INTO weeks (year_id, pvs_id, week) VALUES ((SELECT id FROM years WHERE year = 2016), (SELECT id FROM pvs WHERE type = 'A'), 12);
+INSERT INTO weeks (year_id, pvs_id, week) VALUES ((SELECT id FROM years WHERE year = 2016), (SELECT id FROM pvs WHERE type = 'B'), 13);
+INSERT INTO weeks (year_id, pvs_id, week) VALUES ((SELECT id FROM years WHERE year = 2016), (SELECT id FROM pvs WHERE type = 'A'), 14);
+INSERT INTO weeks (year_id, pvs_id, week) VALUES ((SELECT id FROM years WHERE year = 2016), (SELECT id FROM pvs WHERE type = 'A'), 15);
+INSERT INTO weeks (year_id, pvs_id, week) VALUES ((SELECT id FROM years WHERE year = 2016), (SELECT id FROM pvs WHERE type = 'A'), 16);
+INSERT INTO weeks (year_id, pvs_id, week) VALUES ((SELECT id FROM years WHERE year = 2016), (SELECT id FROM pvs WHERE type = 'A'), 17);
