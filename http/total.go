@@ -8,7 +8,7 @@ import (
 	"github.com/ameske/nfl-pickem"
 )
 
-// WeeklyTotals returns the pre-calculated results for all users for a given year and week.
+// WeeklyTotals returns the current point totals for all users for a given year and week.
 func weeklyTotals(db nflpickem.WeekTotalFetcher) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		yearStr := r.FormValue("year")

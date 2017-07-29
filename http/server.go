@@ -19,6 +19,8 @@ type Server struct {
 	db      nflpickem.Service
 }
 
+// NewServer creates an NFL Pickem Server at the given address, using hashKey and encryptKey for secure cookies,
+// and the given nflpickem.Service for data storage and retrieval.
 func NewServer(address string, hashKey []byte, encryptKey []byte, db nflpickem.Service) (*Server, error) {
 	sc := securecookie.New(hashKey, encryptKey)
 
@@ -45,11 +47,14 @@ func NewServer(address string, hashKey []byte, encryptKey []byte, db nflpickem.S
 	return s, nil
 }
 
+// Start starts the NFL Pickem Server
 func (s *Server) Start() error {
 	log.Printf("NFL Pick-Em Pool listening on %s", s.Address)
 	return http.ListenAndServe(s.Address, s.router)
 }
 
+// login logs a user into the NFL Pickem server, providing a secure cookie that can
+// be used for authentication of subsequent requests
 func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	u, p, ok := r.BasicAuth()
 	if !ok {
@@ -64,7 +69,7 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := s.encodeCookie("nflpickem", user)
+	cookie, err := s.newEncodedCookie("nflpickem", user)
 	if err != nil {
 		log.Println(err)
 		WriteJSONError(w, http.StatusInternalServerError, err.Error())
@@ -76,7 +81,8 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	WriteJSONSuccess(w, "successfully logged in")
 }
 
-func (s *Server) encodeCookie(name string, value interface{}) (*http.Cookie, error) {
+// newEncodedCookie creates a new new encrypted cookie containing the provided value
+func (s *Server) newEncodedCookie(name string, value interface{}) (*http.Cookie, error) {
 	encoded, err := s.sc.Encode(name, value)
 	if err != nil {
 		return nil, err
@@ -91,6 +97,7 @@ func (s *Server) encodeCookie(name string, value interface{}) (*http.Cookie, err
 	}, nil
 }
 
+// logout clears the user's cookie and logs them out from the NFL Pickem Server
 func (s *Server) logout(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("nflpickem")
 	if err != nil && err != http.ErrNoCookie {
@@ -104,6 +111,7 @@ func (s *Server) logout(w http.ResponseWriter, r *http.Request) {
 	WriteJSONSuccess(w, "succesful logout")
 }
 
+// requireLogin ensures that a user is logged before allowing access to the given endpoint
 func (s *Server) requireLogin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := s.verifyLogin(w, r)
@@ -127,6 +135,7 @@ func (s *Server) requireLogin(next http.HandlerFunc) http.HandlerFunc {
 var errNoUser = errors.New("no user information stored in context")
 var errNoLogin = errors.New("no login information found")
 
+// retrieveUser extracts the user from the given context, if they exist.
 func retrieveUser(ctx context.Context) (nflpickem.User, error) {
 	u, ok := ctx.Value("user").(nflpickem.User)
 	if !ok {
@@ -136,6 +145,8 @@ func retrieveUser(ctx context.Context) (nflpickem.User, error) {
 	return u, nil
 }
 
+// verifyLogin attempts to verify a user, either through a provided cookie or HTTP Basic Auth.
+// The resulting user is returned.
 func (s *Server) verifyLogin(w http.ResponseWriter, r *http.Request) (nflpickem.User, error) {
 	cookie, err := r.Cookie("nflpickem")
 	if err == nil {
@@ -156,7 +167,7 @@ func (s *Server) verifyLogin(w http.ResponseWriter, r *http.Request) (nflpickem.
 
 	}
 
-	cookie, err = s.encodeCookie("nflpickem", user)
+	cookie, err = s.newEncodedCookie("nflpickem", user)
 	if err != nil {
 		return nflpickem.User{}, err
 	}

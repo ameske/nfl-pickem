@@ -6,8 +6,6 @@ import (
 	"net/http"
 
 	"github.com/ameske/nfl-pickem"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
 // ChangePassword processes the password change form, informing the user of any problems or success.
@@ -25,14 +23,7 @@ func changePassword(db nflpickem.PasswordUpdater) http.HandlerFunc {
 		p := r.FormValue("oldPassword")
 		pN := r.FormValue("newPassword")
 
-		bpass, err := bcrypt.GenerateFromPassword([]byte(pN), bcrypt.DefaultCost)
-		if err != nil {
-			log.Println(err)
-			WriteJSONError(w, http.StatusInternalServerError, "contact admin")
-			return
-		}
-
-		err = db.UpdatePassword(user.Email, p, string(bpass))
+		err = db.UpdatePassword(user.Email, p, pN)
 		if err != nil {
 			log.Println(err)
 			WriteJSONError(w, http.StatusInternalServerError, "contact admin")

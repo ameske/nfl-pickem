@@ -9,11 +9,18 @@ import (
 	"github.com/ameske/nfl-pickem"
 )
 
+// pickManager is the interface that defines the ability to retrieve and make picks
 type pickManager interface {
 	nflpickem.PickRetriever
 	nflpickem.Picker
 }
 
+// picks retrieves a user's picks for the provided week of the NFL season, OR updates
+// the picks based on provided picks in the request body.
+//
+// URL Parameters:
+//	year: Specifies the current year, Required
+//	week: Specifies the current week, Required
 func picks(db pickManager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := retrieveUser(r.Context())

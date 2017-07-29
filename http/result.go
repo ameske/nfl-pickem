@@ -8,7 +8,7 @@ import (
 	"github.com/ameske/nfl-pickem"
 )
 
-// Results returns the set of picks for the given week, where the game has already started.
+// Results returns the set of picks for the given week where the game has already started.
 //
 // This endpoint sorts the games by date, and sorts the list of pick results by username.
 func results(db nflpickem.ResultFetcher) http.HandlerFunc {
