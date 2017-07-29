@@ -62,19 +62,7 @@ func (db Datastore) currentSeasonStart(t time.Time) (start time.Time, err error)
 }
 
 func (db Datastore) AddWeek(year int, week int, numGames int) error {
-	pvs := ""
-	switch numGames {
-	case 16:
-		pvs = "A"
-	case 15:
-		pvs = "B"
-	case 14:
-		pvs = "C"
-	case 13:
-		pvs = "D"
-	}
-
-	_, err := db.Exec("INSERT INTO weeks(week, year_id, pvs_id) VALUES(?1, (SELECT id FROM YEARS where year = ?2), (SELECT id FROM pvs WHERE type = ?3))", week, year, pvs)
+	_, err := db.Exec("INSERT INTO weeks(week, year_id) VALUES(?1, (SELECT id FROM YEARS where year = ?2))", week, year)
 
 	return err
 }
