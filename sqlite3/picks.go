@@ -8,11 +8,7 @@ import (
 	"github.com/ameske/nfl-pickem"
 )
 
-const (
-	PICK_CORRECT   = 1
-	PICK_INCORRECT = 0
-)
-
+// ErrGameLocked occurs when a pick's game has already kicked off and cannot be changed
 var ErrGameLocked = errors.New("game is locked")
 
 func processPickResults(rows *sql.Rows) (nflpickem.PickSet, error) {
@@ -37,6 +33,7 @@ func processPickResults(rows *sql.Rows) (nflpickem.PickSet, error) {
 	return picks, nil
 }
 
+// SelectedPicks returns the user's selected picks for the given week of the requested NFL season.
 func (db Datastore) SelectedPicks(username string, year int, week int) (nflpickem.PickSet, error) {
 	sql := `SELECT years.year, weeks.week, home.city, home.nickname, away.city, away.nickname, games.date, games.home_score, games.away_score, selection.city, selection.nickname, picks.points, users.first_name, users.last_name, users.email
 		FROM picks
@@ -58,6 +55,7 @@ func (db Datastore) SelectedPicks(username string, year int, week int) (nflpicke
 	return processPickResults(rows)
 }
 
+// Picks returns the given user's picks for the given week of the requested NFL season.
 func (db Datastore) Picks(username string, year int, week int) (nflpickem.PickSet, error) {
 	sql := `SELECT years.year, weeks.week, home.city, home.nickname, away.city, away.nickname, games.date, games.home_score, games.away_score, selection.city, selection.nickname, picks.points, users.first_name, users.last_name, users.email
 		FROM picks
@@ -79,19 +77,7 @@ func (db Datastore) Picks(username string, year int, week int) (nflpickem.PickSe
 	return processPickResults(rows)
 }
 
-func (db Datastore) Grade(id int, points int, correct bool) error {
-	var intBool int
-	if correct {
-		intBool = PICK_CORRECT
-	} else {
-		intBool = PICK_INCORRECT
-	}
-
-	_, err := db.Exec("UPDATE picks SET correct = ?1, points = ?2 WHERE id = ?3", intBool, points, id)
-
-	return err
-}
-
+// TODO: Implement MakePicks
 func (db Datastore) MakePicks(picks nflpickem.PickSet) error {
 	return nil
 }

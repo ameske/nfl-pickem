@@ -2,18 +2,22 @@ package sqlite3
 
 import "github.com/ameske/nfl-pickem"
 
+// UserWeekTotal returns the user's total for the given week of the NFL season.
 func (db Datastore) UserWeekTotal(username string, year int, week int) ([]nflpickem.WeekTotal, error) {
 	return db.weekTotals(username, year, week, week)
 }
 
+// UserWeekTotals returns the totals for all weeks up to the given week of the NFL season.
 func (db Datastore) UserWeekTotals(username string, year int, week int) ([]nflpickem.WeekTotal, error) {
 	return db.weekTotals(username, year, 1, week)
 }
 
+// WeekTotals reutrns all users totals for the given week of the NFL season.
 func (db Datastore) WeekTotals(year int, week int) ([]nflpickem.WeekTotal, error) {
 	return db.weekTotals("%", year, week, week)
 }
 
+// CumulativeWeekTotals returns all users totals up to the given week of the NFL season.
 func (db Datastore) CumulativeWeekTotals(year int, week int) ([]nflpickem.WeekTotal, error) {
 	return db.weekTotals("%", year, 1, week)
 }

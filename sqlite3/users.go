@@ -8,6 +8,7 @@ import (
 
 var unknownUser = nflpickem.User{}
 
+// CheckCredentials compares the given password to the store password hash in the datastore.
 func (db Datastore) CheckCredentials(username string, password string) (nflpickem.User, error) {
 	var storedPassword string
 	var user nflpickem.User
@@ -26,12 +27,18 @@ func (db Datastore) CheckCredentials(username string, password string) (nflpicke
 	return user, nil
 }
 
+// UpdatePassword updates the given user's password in the datastore, hashing it before storing it.
 func (db Datastore) UpdatePassword(username string, oldPassword string, newPassword string) error {
 	_, err := db.CheckCredentials(username, oldPassword)
 	if err != nil {
 		return err
 	}
 
-	_, err = db.Exec("UPDATE users SET password = ?1 WHERE email = ?2", string(newPassword), username)
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec("UPDATE users SET password = ?1 WHERE email = ?2", string(hash), username)
 	return err
 }

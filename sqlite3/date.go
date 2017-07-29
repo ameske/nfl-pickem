@@ -12,11 +12,11 @@ const (
 	seasonLength = 17
 )
 
+// CurrentWeek returns the current week of the season. A season starts on the
+// Tuesday before the first game. A new week starts every Tuesday. Given the
+// current time, we can calculate the current week of the season. A week set
+// to -1 means that we are in the offseason.
 func (db Datastore) CurrentWeek(t time.Time) (nflpickem.Week, error) {
-	/*
-		The season starts on the Tuesday before the first game.
-		To figure out what week we are in, calculate where we are from there.
-	*/
 	start, err := db.currentSeasonStart(t)
 	if err != nil {
 		return nflpickem.Week{Year: -1, Week: -1}, err
@@ -61,12 +61,14 @@ func (db Datastore) currentSeasonStart(t time.Time) (start time.Time, err error)
 	}
 }
 
-func (db Datastore) AddWeek(year int, week int, numGames int) error {
+// AddWeek adds the week, associated with the given year to the datastore.
+func (db Datastore) AddWeek(year int, week int) error {
 	_, err := db.Exec("INSERT INTO weeks(week, year_id) VALUES(?1, (SELECT id FROM YEARS where year = ?2))", week, year)
 
 	return err
 }
 
+// AddYear adds the year with the given start epoch to the datastore.
 func (db Datastore) AddYear(year int, yearStart int) error {
 	_, err := db.Exec("INSERT INTO years(year, year_start) VALUES(?1, ?2)", year, yearStart)
 

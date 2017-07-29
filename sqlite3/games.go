@@ -6,10 +6,12 @@ import (
 	"github.com/ameske/nfl-pickem"
 )
 
+// WeekGames returns the games for only the specified week from the datastore.
 func (db Datastore) WeekGames(year int, week int) ([]nflpickem.Game, error) {
 	return db.games(year, week, week)
 }
 
+// CumulativeGames returns games up to the specified week from the datastore.
 func (db Datastore) CumulativeGames(year int, week int) ([]nflpickem.Game, error) {
 	return db.games(year, 1, week)
 }
@@ -48,6 +50,8 @@ func (db Datastore) games(year int, minWeek int, maxWeek int) ([]nflpickem.Game,
 	return games, nil
 }
 
+// UpdateGame overwrites the stored home and away score for the given game. The game is specified by the
+// year, week, and home team, which uniquely identifies any game.
 func (db Datastore) UpdateGame(week int, year int, homeTeam string, homeScore int, awayScore int) error {
 	// sqlite3 makes this hard on us by not allowing JOIN in UPDATE
 	// so we have to do this in a couple of steps
@@ -70,13 +74,16 @@ func (db Datastore) UpdateGame(week int, year int, homeTeam string, homeScore in
 	return err
 }
 
-func (db Datastore) AddGame(date time.Time, homeTeam string, awayTeam string, wk17splitYear bool) error {
+// AddGame adds the given game to the datastore.
+func (db Datastore) AddGame(date time.Time, homeTeam string, awayTeam string) error {
 	nflWeek, err := db.CurrentWeek(date)
 	if err != nil {
 		return err
 	}
 
-	if wk17splitYear {
+	// If the month is January, the NFL regular season bled over into the next calendar year, we need to adjust the year
+	// back one so that the game is counted as part of the correct NFL year.
+	if date.Month() == 1 {
 		_, err = db.Exec(`INSERT INTO games(week_id, date, home_id, away_id)
 			 VALUES((SELECT weeks.id FROM weeks JOIN years ON weeks.year_id = years.id WHERE years.year = ?1 AND weeks.week = ?2), ?3, (SELECT id FROM teams WHERE nickname = ?4), (SELECT id FROM teams WHERE nickname = ?5))`, date.Year()-1, nflWeek.Week, date.Unix(), homeTeam, awayTeam)
 	} else {
