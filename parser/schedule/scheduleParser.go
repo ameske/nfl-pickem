@@ -70,7 +70,7 @@ func (p *Parser) Parse() ([]Matchup, error) {
 		if err != nil {
 			return nil, err
 		}
-		if meridian == "pm" {
+		if strings.ToUpper(strings.TrimSpace(meridian)) == "PM" {
 			hour += 12
 		}
 
