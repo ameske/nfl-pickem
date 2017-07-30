@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"net"
 	"net/smtp"
 	"os"
@@ -12,27 +11,21 @@ import (
 	"github.com/ameske/nfl-pickem"
 )
 
-type Notifier interface {
-	Notify(to string, week int, picks []nflpickem.Pick)
-}
-
 type nullNotifier struct{}
 
-func (n nullNotifier) Notify(to string, week int, picks []nflpickem.Pick) {}
+func (n nullNotifier) Notify(to string, week int, picks []nflpickem.Pick) error { return nil }
 
 type fsNotifier struct{}
 
-func (n fsNotifier) Notify(to string, week int, picks []nflpickem.Pick) {
+func (n fsNotifier) Notify(to string, week int, picks []nflpickem.Pick) error {
 	fd, err := os.Create(fmt.Sprintf("%s-%d.txt", to, week))
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 
 	et, err := template.New("email").Parse(emailBody)
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 
 	pe := struct {
@@ -45,11 +38,7 @@ func (n fsNotifier) Notify(to string, week int, picks []nflpickem.Pick) {
 		to, "debugserver", fmt.Sprintf("Week %d Picks", week), week, picks,
 	}
 
-	err = et.Execute(fd, pe)
-	if err != nil {
-		log.Println(err)
-		return
-	}
+	return et.Execute(fd, pe)
 }
 
 type emailNotifier struct {
@@ -60,7 +49,7 @@ type emailNotifier struct {
 	et             *template.Template
 }
 
-func NewEmailNotifier(server, sendAsAddress, password string) (Notifier, error) {
+func NewEmailNotifier(server, sendAsAddress, password string) (nflpickem.Notifier, error) {
 	addr, port, err := net.SplitHostPort(server)
 	if err != nil {
 		return nil, err
@@ -80,7 +69,7 @@ func NewEmailNotifier(server, sendAsAddress, password string) (Notifier, error) 
 	return emailNotifier{auth: a, sender: sendAsAddress, smtpServer: addr, smtpServerPort: port, et: et}, nil
 }
 
-func (e emailNotifier) Notify(to string, week int, picks []nflpickem.Pick) {
+func (e emailNotifier) Notify(to string, week int, picks []nflpickem.Pick) error {
 	pe := struct {
 		To      string
 		From    string
@@ -92,14 +81,14 @@ func (e emailNotifier) Notify(to string, week int, picks []nflpickem.Pick) {
 	}
 
 	var body bytes.Buffer
-	e.et.Execute(&body, pe)
+	err := e.et.Execute(&body, pe)
+	if err != nil {
+		return err
+	}
 
 	fullAddr := fmt.Sprintf("%s:%s", e.smtpServer, e.smtpServerPort)
 
-	err := smtp.SendMail(fullAddr, e.auth, e.sender, []string{to}, body.Bytes())
-	if err != nil {
-		log.Printf("Email Error: %s", err.Error())
-	}
+	return smtp.SendMail(fullAddr, e.auth, e.sender, []string{to}, body.Bytes())
 }
 
 var emailBody = `

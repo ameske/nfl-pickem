@@ -12,3 +12,7 @@ type Service interface {
 	WeekTotalFetcher
 	CredentialChecker
 }
+
+type Notifier interface {
+	Notify(to string, week int, picks []Pick) error
+}

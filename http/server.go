@@ -21,14 +21,14 @@ type Server struct {
 
 // NewServer creates an NFL Pickem Server at the given address, using hashKey and encryptKey for secure cookies,
 // and the given nflpickem.Service for data storage and retrieval.
-func NewServer(address string, hashKey []byte, encryptKey []byte, db nflpickem.Service) (*Server, error) {
+func NewServer(address string, hashKey []byte, encryptKey []byte, nflService nflpickem.Service, notifier nflpickem.Notifier) (*Server, error) {
 	sc := securecookie.New(hashKey, encryptKey)
 
 	s := &Server{
 		Address: address,
 		router:  http.NewServeMux(),
 		sc:      sc,
-		db:      db,
+		db:      nflService,
 	}
 
 	gob.Register(nflpickem.User{})
@@ -36,13 +36,13 @@ func NewServer(address string, hashKey []byte, encryptKey []byte, db nflpickem.S
 	s.router.HandleFunc("/login", s.login)
 	s.router.HandleFunc("/logout", s.logout)
 
-	s.router.HandleFunc("/current", currentWeek(db))
-	s.router.HandleFunc("/games", games(db))
-	s.router.HandleFunc("/results", results(db))
-	s.router.HandleFunc("/totals", weeklyTotals(db))
+	s.router.HandleFunc("/current", currentWeek(nflService))
+	s.router.HandleFunc("/games", games(nflService))
+	s.router.HandleFunc("/results", results(nflService))
+	s.router.HandleFunc("/totals", weeklyTotals(nflService))
 
-	s.router.HandleFunc("/picks", s.requireLogin(picks(db)))
-	s.router.HandleFunc("/password", s.requireLogin(changePassword(db)))
+	s.router.HandleFunc("/picks", s.requireLogin(picks(nflService, notifier)))
+	s.router.HandleFunc("/password", s.requireLogin(changePassword(nflService)))
 
 	return s, nil
 }

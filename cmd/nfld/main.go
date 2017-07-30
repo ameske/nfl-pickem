@@ -10,6 +10,7 @@ import (
 	"log/syslog"
 	"os"
 
+	nflpickem "github.com/ameske/nfl-pickem"
 	"github.com/ameske/nfl-pickem/http"
 	"github.com/ameske/nfl-pickem/sqlite3"
 )
@@ -60,13 +61,10 @@ func parseSecureCookieKeys(b64HashKey, b64EncryptKey string) (hashKey []byte, en
 	return
 }
 
-func setupNotifier(c config) (Notifier, error) {
+func setupNotifier(c config) (n nflpickem.Notifier, err error) {
 	if !c.Email.Enabled {
 		return nullNotifier{}, nil
 	}
-
-	var n Notifier
-	var err error
 
 	switch c.Email.Type {
 	case "fs":
@@ -115,12 +113,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	/*
-		notifier, err := setupNotifier(c)
-		if err != nil {
-			log.Fatal(err)
-		}
-	*/
+	notifier, err := setupNotifier(c)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if c.Server.Autoupdate {
 		scheduleUpdates(db)
@@ -131,7 +127,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	server, err := http.NewServer("0.0.0.0:61389", hashKey, encryptKey, db)
+	server, err := http.NewServer("0.0.0.0:61389", hashKey, encryptKey, db, notifier)
 	if err != nil {
 		log.Fatal(err)
 	}
