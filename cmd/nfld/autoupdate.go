@@ -141,5 +141,5 @@ func nextDay(day time.Weekday) time.Time {
 }
 
 func logNextScheduleUpdate(t time.Time) {
-	slog.Info("Scheduling update for " + t.Format(time.RFC1123))
+	log.Printf("Scheduling update for %v", t.Format(time.RFC1123))
 }

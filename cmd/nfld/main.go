@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"flag"
-	"io"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"log/syslog"
@@ -15,9 +15,6 @@ import (
 )
 
 // For now, we will let all of these things be global since it's easier
-var (
-	slog *syslog.Writer
-)
 
 type config struct {
 	Server struct {
@@ -25,9 +22,11 @@ type config struct {
 		EncryptKey string `json:"encryptKey"`
 		Database   string `json:"databaseFile"`
 		LogosDir   string `json:"logosDirectory"`
+		Autoupdate bool   `json:"autoupdateEnabled"`
 	} `json:"server"`
 	Email struct {
 		Enabled     bool   `json:"enabled"`
+		Type        string `json:"type"`
 		Sender      string `json:"sendAsAddress"`
 		Password    string `json:"password"`
 		SMTPAddress string `json:"smtpAddress"`
@@ -61,42 +60,54 @@ func parseSecureCookieKeys(b64HashKey, b64EncryptKey string) (hashKey []byte, en
 	return
 }
 
+func setupNotifier(c config) (Notifier, error) {
+	if !c.Email.Enabled {
+		return nullNotifier{}, nil
+	}
+
+	var n Notifier
+	var err error
+
+	switch c.Email.Type {
+	case "fs":
+		n, err = fsNotifier{}, nil
+	case "email":
+		n, err = NewEmailNotifier(c.Email.SMTPAddress, c.Email.Sender, c.Email.Password)
+	default:
+		n, err = nil, fmt.Errorf("unrecognized e-mail type: %s", c.Email.Type)
+	}
+
+	return n, err
+}
+
 func main() {
-	configFile := flag.String("config", "/opt/ameske/gonfl/conf.json", "Path to server config file")
-	debug := flag.Bool("debug", false, "used when running the server out of the source repo")
-	dbFile := flag.String("db", "", "override the configuration database")
-	/*
-		runUpdate := flag.String("update", "", "update scores and results using given results JSON file")
-		gradeOnly := flag.Bool("grade", false, "don't run in daemon mode and just grade the given year and week")
-		year := flag.Int("year", -1, "year for batch processing mode")
-		week := flag.Int("week", -1, "week for batch processing mode")
-	*/
+	var dbFile, configFile string
+	var stdout bool
+
+	flag.StringVar(&configFile, "config", "/opt/ameske/gonfl/conf.json", "Path to server config file")
+	flag.StringVar(&dbFile, "db", "", "override the configuration file's databsae location")
+	flag.BoolVar(&stdout, "stdout", false, "log to the console instead of syslog")
 
 	flag.Parse()
 
 	var err error
-	slog, err = syslog.New(syslog.LOG_INFO|syslog.LOG_LOCAL0, "nfl-pickem")
-	if err != nil {
-		log.Fatal("Could not connect to syslog:", err)
-	}
 
 	var c config
+	c = loadConfig(configFile)
 
-	if !*debug {
-		c = loadConfig(*configFile)
-		log.SetOutput(slog)
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	if stdout {
+		log.SetOutput(os.Stdout)
 	} else {
-		log.SetOutput(io.MultiWriter(slog, os.Stdout))
-		log.SetFlags(log.LstdFlags | log.Lshortfile)
-		c.Server.AuthKey = base64.StdEncoding.EncodeToString([]byte("something secret"))
-		c.Server.EncryptKey = base64.StdEncoding.EncodeToString([]byte("something secret"))
-		c.Server.Database = "nfl.db"
-		c.Server.LogosDir = "/Users/ameske/Documents/go/src/github.com/ameske/nfl-pickem/logos"
-		c.Email.Enabled = false
+		slog, err := syslog.New(syslog.LOG_INFO|syslog.LOG_LOCAL0, "nfl-pickem")
+		if err != nil {
+			log.Fatal("Could not connect to syslog:", err)
+		}
+		log.SetOutput(slog)
 	}
 
-	if *dbFile != "" {
-		c.Server.Database = *dbFile
+	if dbFile != "" {
+		c.Server.Database = dbFile
 	}
 
 	db, err := sqlite3.NewDatastore(c.Server.Database)
@@ -105,23 +116,15 @@ func main() {
 	}
 
 	/*
-		var n Notifier
-		if c.Email.Enabled {
-			n, err = NewEmailNotifier(c.Email.SMTPAddress, c.Email.Sender, c.Email.Password)
-			if err != nil {
-				n = nullNotifier{}
-			}
-
-		} else if *debug {
-			n = fsNotifier{}
-		} else {
-
-			n = nullNotifier{}
+		notifier, err := setupNotifier(c)
+		if err != nil {
+			log.Fatal(err)
 		}
-
 	*/
 
-	scheduleUpdates(db)
+	if c.Server.Autoupdate {
+		scheduleUpdates(db)
+	}
 
 	hashKey, encryptKey, err := parseSecureCookieKeys(c.Server.AuthKey, c.Server.EncryptKey)
 	if err != nil {
