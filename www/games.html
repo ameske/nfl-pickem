@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="NFL Pick-Em Pool Webapp">
+    <meta name="author" content="Kyle Ames">
+    <title>NFL Pickem Pool - Games</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="nflpickem.js"></script>
+    <script src="games.js"></script>
+  </head>
+
+  <body style="padding-top: 70px;">
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+          </button>
+          <a class="navbar-brand" href="index.html">NFL Pick-Em</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="games.html">Games</a></li>
+            <li><a href="standings.html">Weekly Standings</a></li>
+            <li><a href="results.html">Results</a></li>
+            <li><a href="admin.html">Admin</a></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="picks.html">Picks</a></li>
+            <li><a href="login.html">Login</a></li>
+            <li><a href="logout.html">Logout</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+
+    <div class="container">
+
+      <div class="page-header"><h1>NFL Games</h1></div>
+
+      <nav aria-label="Page navigation">
+        <ul class="pagination" id="weekselector">
+        </ul>
+      </nav>
+
+      <table id="games" class="table table-bordered table-hover">
+        <thead>
+          <tr>
+              <th>Date</th>
+              <th>Away Team</th>
+              <th>Away Score</th>
+              <th>Home Team</th>
+              <th>Home Score</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+    
+  </body>
+</html>
