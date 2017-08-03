@@ -44,6 +44,8 @@ func NewServer(address string, hashKey []byte, encryptKey []byte, nflService nfl
 	s.router.HandleFunc("/picks", s.requireLogin(picks(nflService, notifier)))
 	s.router.HandleFunc("/password", s.requireLogin(changePassword(nflService)))
 
+	s.router.HandleFunc("/years", years(nflService))
+
 	return s, nil
 }
 

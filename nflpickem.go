@@ -11,8 +11,13 @@ type Service interface {
 	ResultFetcher
 	WeekTotalFetcher
 	CredentialChecker
+	DataSummarizer
 }
 
 type Notifier interface {
 	Notify(to string, week int, picks []Pick) error
+}
+
+type DataSummarizer interface {
+	Years() ([]int, error)
 }
