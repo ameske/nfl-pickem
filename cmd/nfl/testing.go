@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"math/rand"
 	"time"
 
 	nflpickem "github.com/ameske/nfl-pickem"
@@ -9,24 +10,88 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var testdbWeeks uint
+var testWeeks uint
+var testWeek uint
+var testYear uint
+var testThur, testSunEarly, testSunLate, testSunNight, testMon bool
 
 func init() {
-	TestDBCmd.AddCommand(setupCommand)
+	TestCmd.AddCommand(setupCommand)
+	TestCmd.AddCommand(generateCommand)
+
+	setupCommand.AddCommand(generateResultsCommand)
 
 	// Game/User/Pick setup (year/weeks)
-	setupCommand.Flags().UintVarP(&testdbWeeks, "weeks", "w", 0, "number of weeks to generate fake data")
-	setupCommand.Flags().StringVarP(&datastore, "db", "d", "", "path to datastore")
+	setupCommand.Flags().UintVarP(&testWeeks, "weeks", "w", 0, "number of weeks to generate fake data")
 
-	// Randomize picks (year/week)
+	// Randomize pick selections (year/week)
 
 	// Randomize game results (year/week)
+	generateCommand.AddCommand(generateResultsCommand)
+	generateResultsCommand.Flags().UintVarP(&testWeek, "week", "w", 0, "week to generate game results for")
+	generateResultsCommand.Flags().UintVarP(&testYear, "year", "y", 0, "year to genearate game results for")
+	generateResultsCommand.Flags().BoolVarP(&testThur, "thur", "t", false, "generate thursday game result")
+	generateResultsCommand.Flags().BoolVarP(&testSunEarly, "sune", "e", false, "generate sunday early game result")
+	generateResultsCommand.Flags().BoolVarP(&testSunLate, "sunl", "l", false, "generate sunday late game result")
+	generateResultsCommand.Flags().BoolVarP(&testSunNight, "sunn", "n", false, "generate sunday night game result")
+	generateResultsCommand.Flags().BoolVarP(&testMon, "mon", "m", false, "generate monday game result")
 }
 
-var TestDBCmd = &cobra.Command{
-	Use:   "testdb",
+var TestCmd = &cobra.Command{
+	Use:   "testing",
 	Short: "manipulate a test db instance",
 	Long:  "manipulate a test db instance",
+}
+
+var generateCommand = &cobra.Command{
+	Use:   "generate",
+	Short: "generate fake data for a db instance",
+	Long:  "generate fake data for a db instance",
+}
+
+var generateResultsCommand = &cobra.Command{
+	Use:   "results",
+	Short: "generate fake results for a db instance",
+	Long:  "generate fake results for a db instance",
+	Run: func(cmd *cobra.Command, args []string) {
+		if datastore == "" {
+			log.Fatal("db flag is required")
+		}
+
+		if testYear == 0 || testWeek == 0 {
+			log.Fatal("year and week required")
+		}
+
+		rand.Seed(time.Now().Unix())
+
+		db, err := sqlite3.NewDatastore(datastore)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Get the week's games
+		games, err := db.WeekGames(int(testYear), int(testWeek))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		log.Println(games)
+
+		// Generate random scores and upate the game
+		for _, g := range games {
+			home := rand.Intn(64)
+			away := rand.Intn(64)
+
+			if verbose {
+				log.Printf("UpdateGame(%v, %v, %v, %v, %v)\n", int(testWeek), int(testYear), g.Home.Nickname, home, away)
+			}
+
+			err := db.UpdateGame(int(testWeek), int(testYear), g.Home.Nickname, home, away)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	},
 }
 
 var setupCommand = &cobra.Command{
@@ -34,7 +99,7 @@ var setupCommand = &cobra.Command{
 	Short: "setup a test db instance with generated data",
 	Long:  "setup a test db instance with generated data",
 	Run: func(cmd *cobra.Command, args []string) {
-		if testdbWeeks == 0 {
+		if testWeeks == 0 {
 			log.Fatal("weeks must be set via command line")
 
 		}
@@ -60,7 +125,7 @@ var setupCommand = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		for i := 0; i < int(testdbWeeks); i++ {
+		for i := 0; i < int(testWeeks); i++ {
 			err = db.AddWeek(next.Year(), i+1)
 			if err != nil {
 				log.Fatal(err)

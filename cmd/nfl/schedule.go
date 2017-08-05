@@ -14,7 +14,6 @@ import (
 )
 
 var scheduleYear, scheduleWeek uint
-var scheduleVerbose bool
 var scheduleFile string
 
 func init() {
@@ -23,7 +22,6 @@ func init() {
 
 	scheduleDownloadCmd.Flags().UintVarP(&scheduleYear, "year", "y", 0, "NFL season year")
 	scheduleDownloadCmd.Flags().UintVarP(&scheduleWeek, "week", "w", 0, "NFL season week")
-	scheduleDownloadCmd.Flags().BoolVarP(&scheduleVerbose, "verbose", "v", false, "Print verbose output to stderr")
 
 	scheduleImportCmd.Flags().UintVarP(&scheduleYear, "year", "y", 0, "NFL season year")
 	scheduleImportCmd.Flags().UintVarP(&scheduleWeek, "week", "w", 0, "NFL season week")
@@ -51,7 +49,7 @@ var scheduleDownloadCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		if scheduleVerbose {
+		if verbose {
 			for _, g := range games {
 				fmt.Fprintln(os.Stderr, g)
 			}
