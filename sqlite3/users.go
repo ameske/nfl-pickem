@@ -29,16 +29,22 @@ func (db Datastore) CheckCredentials(username string, password string) (nflpicke
 
 // UpdatePassword updates the given user's password in the datastore, hashing it before storing it.
 func (db Datastore) UpdatePassword(username string, oldPassword string, newPassword string) error {
-	_, err := db.CheckCredentials(username, oldPassword)
-	if err != nil {
-		return err
-	}
-
 	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 
 	_, err = db.Exec("UPDATE users SET password = ?1 WHERE email = ?2", string(hash), username)
+	return err
+}
+
+func (db Datastore) AddUser(first string, last string, email string, password string, admin bool) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec("INSERT INTO users(first_name, last_name, email, password, admin) VALUES(?1, ?2, ?3, ?4, ?5)", first, last, email, hash, admin)
+
 	return err
 }

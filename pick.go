@@ -12,6 +12,12 @@ type Picker interface {
 	MakePicks(PickSet) error
 }
 
+// PickCreater is the interface implemented by a type that can add picks to a
+// data source.
+type PickCreater interface {
+	CreatePicks(username string, year int, week int) error
+}
+
 // A Pick represents a user's selection for a given game.
 //
 // The Pick can stand on its own since it contains embedded game information

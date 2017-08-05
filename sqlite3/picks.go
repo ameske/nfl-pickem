@@ -81,3 +81,50 @@ func (db Datastore) Picks(username string, year int, week int) (nflpickem.PickSe
 func (db Datastore) MakePicks(picks nflpickem.PickSet) error {
 	return nil
 }
+
+func (db Datastore) CreatePicks(username string, year int, week int) error {
+	games, err := gameIds(db, year, week)
+	if err != nil {
+		return nil
+	}
+
+	sql := `INSERT INTO picks(user_id, game_id) VALUES((SELECT id FROM users WHERE email = ?1), ?2)`
+
+	for _, gid := range games {
+		_, err = db.Exec(sql, username, gid)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func gameIds(db Datastore, year int, week int) ([]int, error) {
+	sql := `SELECT id
+		FROM games
+		WHERE week_id = (SELECT weeks.id
+				  FROM weeks
+				  JOIN years ON weeks.year_id = years.id
+				  WHERE years.year = ?1 AND weeks.week = ?2)`
+
+	rows, err := db.Query(sql, year, week)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	games := make([]int, 0)
+
+	for rows.Next() {
+		var tmp int
+		err = rows.Scan(&tmp)
+		if err != nil {
+			return nil, err
+		}
+
+		games = append(games, tmp)
+	}
+
+	return games, rows.Err()
+}

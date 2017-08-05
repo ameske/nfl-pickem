@@ -12,6 +12,10 @@ func (u User) Equal(other User) bool {
 	return u.Email == other.Email
 }
 
+type UserAdder interface {
+	AddUser(first string, last string, email string, password string, admin bool) error
+}
+
 type PasswordUpdater interface {
 	UpdatePassword(username string, oldPassword string, newPassword string) error
 }

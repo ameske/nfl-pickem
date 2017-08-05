@@ -13,22 +13,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var year, week uint
-var verbose bool
-var file string
-var datastore string
+var scheduleYear, scheduleWeek uint
+var scheduleVerbose bool
+var scheduleFile string
 
 func init() {
 	ScheduleCmd.AddCommand(scheduleDownloadCmd)
 	ScheduleCmd.AddCommand(scheduleImportCmd)
 
-	scheduleDownloadCmd.Flags().UintVarP(&year, "year", "y", 0, "NFL season year")
-	scheduleDownloadCmd.Flags().UintVarP(&week, "week", "w", 0, "NFL season week")
-	scheduleDownloadCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Print verbose output to stderr")
+	scheduleDownloadCmd.Flags().UintVarP(&scheduleYear, "year", "y", 0, "NFL season year")
+	scheduleDownloadCmd.Flags().UintVarP(&scheduleWeek, "week", "w", 0, "NFL season week")
+	scheduleDownloadCmd.Flags().BoolVarP(&scheduleVerbose, "verbose", "v", false, "Print verbose output to stderr")
 
-	scheduleImportCmd.Flags().UintVarP(&year, "year", "y", 0, "NFL season year")
-	scheduleImportCmd.Flags().UintVarP(&week, "week", "w", 0, "NFL season week")
-	scheduleImportCmd.Flags().StringVarP(&file, "file", "f", "", "use file for schedule JSON")
+	scheduleImportCmd.Flags().UintVarP(&scheduleYear, "year", "y", 0, "NFL season year")
+	scheduleImportCmd.Flags().UintVarP(&scheduleWeek, "week", "w", 0, "NFL season week")
+	scheduleImportCmd.Flags().StringVarP(&scheduleFile, "file", "f", "", "use file for schedule JSON")
 	scheduleImportCmd.Flags().StringVarP(&datastore, "db", "d", "", "path to datastore")
 }
 
@@ -43,16 +42,16 @@ var scheduleDownloadCmd = &cobra.Command{
 	Short: "download schedules from the NFL's website",
 	Long:  "download schedules from the NFL's website",
 	Run: func(cmd *cobra.Command, args []string) {
-		if year == 0 || week == 0 {
+		if scheduleYear == 0 || scheduleWeek == 0 {
 			log.Fatal("year and week must be set via command line")
 		}
 
-		games, err := getScheduleFromNFL(year, week)
+		games, err := getScheduleFromNFL(scheduleYear, scheduleWeek)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		if verbose {
+		if scheduleVerbose {
 			for _, g := range games {
 				fmt.Fprintln(os.Stderr, g)
 			}
@@ -82,8 +81,8 @@ var scheduleImportCmd = &cobra.Command{
 
 		// Load a []schedule.Matchup from the NFL or a file
 		var games []schedule.Matchup
-		if file != "" {
-			fd, err := os.Open(file)
+		if scheduleFile != "" {
+			fd, err := os.Open(scheduleFile)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -92,8 +91,8 @@ var scheduleImportCmd = &cobra.Command{
 			if err != nil {
 				log.Fatal(err)
 			}
-		} else if year != 0 && week != 0 {
-			games, err = getScheduleFromNFL(year, week)
+		} else if scheduleYear != 0 && scheduleWeek != 0 {
+			games, err = getScheduleFromNFL(scheduleYear, scheduleWeek)
 			if err != nil {
 				log.Fatal(err)
 			}

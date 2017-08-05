@@ -12,6 +12,10 @@ type Service interface {
 	WeekTotalFetcher
 	CredentialChecker
 	DataSummarizer
+	UserAdder
+	GameAdder
+	DateAdder
+	PickCreater
 }
 
 type Notifier interface {
