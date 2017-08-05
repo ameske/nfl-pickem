@@ -16,27 +16,27 @@ var gamesCache = [];
 //    year - NFL schedule year
 //    week - NFL schedule week
 function loadGames(year, week) {
-    if (gamesCache[week] != null) {
-      renderGamesTable(gamesCache[week]);
-      return
+  if (gamesCache[week] != null) {
+    renderGamesTable(gamesCache[week]);
+    return
+  }
+
+  var request = new XMLHttpRequest();
+  request.open("GET", "http://localhost:61389/games?year="+year+"&week="+week, true);
+
+  request.onload = function() {
+    if (this.status >= 200 && this.status < 400) {
+      var games = JSON.parse(this.response);
+      gamesCache[week] = games;
+      renderGamesTable(games);
+    } else {
+      // TODO: Handle error gracefully
     }
+  };
 
-    var request = new XMLHttpRequest();
-    request.open("GET", "http://localhost:61389/games?year="+year+"&week="+week, true);
+  // TODO: Handle error request.onerror
 
-    request.onload = function() {
-      if (this.status >= 200 && this.status < 400) {
-        var games = JSON.parse(this.response);
-        gamesCache[week] = games;
-        renderGamesTable(games);
-      } else {
-        // TODO: Handle error gracefully
-      }
-    };
-
-    // TODO: Handle error request.onerror
-
-    request.send();
+  request.send();
 }
 
 // setGameTable takes a list of JSON objects representing NFL Pick-Em' Games and populates

@@ -8,12 +8,12 @@
 //      updateFn - the function to run that updates the rest of the page
 function yearOnClickFunc(yearRoot, weekRoot, element, updateFn) {
   return function() {
-        unselectAll(yearRoot);
-        element.classList.add("active");
+    unselectAll(yearRoot);
+    element.classList.add("active");
 
-        week = currentlySelectedElementValue(weekRoot);
+    week = currentlySelectedElementValue(weekRoot);
 
-        updateFn(parseInt(element.innerText), week);
+    updateFn(parseInt(element.innerText), week);
   }
 }
 
@@ -27,12 +27,12 @@ function yearOnClickFunc(yearRoot, weekRoot, element, updateFn) {
 //      updateFn - the function to run that updates the rest of the page
 function weekOnClickFunc(weekRoot, yearRoot, element, updateFn) {
   return function() {
-        unselectAll(weekRoot);
-        element.classList.add("active");
+    unselectAll(weekRoot);
+    element.classList.add("active");
 
-        year = currentlySelectedElementValue(yearRoot);
+    year = currentlySelectedElementValue(yearRoot);
 
-        updateFn(year, parseInt(element.innerText));
+    updateFn(year, parseInt(element.innerText));
   }
 }
 
