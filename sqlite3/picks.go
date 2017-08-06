@@ -2,7 +2,6 @@ package sqlite3
 
 import (
 	"errors"
-	"log"
 	"time"
 
 	"github.com/ameske/nfl-pickem"
@@ -118,9 +117,19 @@ func (db Datastore) UserPicks(username string, year int, week int) (nflpickem.Pi
 	return append(selected, unselected...), nil
 }
 
-// TODO: Implement MakePicks
+// MakePicks updates the selection and points of picks in the pickset.
+//
+// No checking is done to ensure that the pickset is legal, this is the responsibility
+// of the caller. MakePicks can fail however if a provided pick does not match
+// a pick in the database.
 func (db Datastore) MakePicks(picks nflpickem.PickSet) error {
-	log.Println(picks)
+	for _, p := range picks {
+		err := updatePick(db, p)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -142,12 +151,14 @@ func (db Datastore) CreatePicks(username string, year int, week int) error {
 	return nil
 }
 
-func updatePick(db Datastore, selection int, points int, id int) error {
-	sql := `UPDATE picks
-	  SET selection = ?1 AND points = ?2
-	  WHERE id = ?3`
+var errInvalidSelection = errors.New("invalid selection")
 
-	_, err := db.Exec(sql, selection, points, id)
+func updatePick(db Datastore, pick nflpickem.Pick) error {
+	sql := `UPDATE picks
+	  SET selection = (SELECT id FROM teams WHERE nickname = ?1), points = ?2
+	  WHERE id = (SELECT picks.id FROM picks JOIN users ON picks.user_id = users.id JOIN games ON picks.game_id = games.id JOIN teams AS home on games.home_id = home.id WHERE users.email = ?3 AND home.nickname = ?4)`
+
+	_, err := db.Exec(sql, pick.Selection.Nickname, pick.Points, pick.User.Email, pick.Game.Home.Nickname)
 
 	return err
 }
