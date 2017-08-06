@@ -4,7 +4,8 @@ import "errors"
 
 // PickRetriever is the interface implemented by types that can retrieve Pick information
 type PickRetriever interface {
-	Picks(username string, year int, week int) (PickSet, error)
+	Picks(year int, week int) (PickSet, error)
+	UserPicks(username string, year int, week int) (PickSet, error)
 }
 
 // Picker is the interface implemented by a type that can make/update picks

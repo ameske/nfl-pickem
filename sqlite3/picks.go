@@ -1,8 +1,8 @@
 package sqlite3
 
 import (
-	"database/sql"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/ameske/nfl-pickem"
@@ -11,7 +11,25 @@ import (
 // ErrGameLocked occurs when a pick's game has already kicked off and cannot be changed
 var ErrGameLocked = errors.New("game is locked")
 
-func processPickResults(rows *sql.Rows) (nflpickem.PickSet, error) {
+// SelectedPicks returns the user's selected picks for the given week of the requested NFL season.
+func (db Datastore) SelectedPicks(username string, year int, week int) (nflpickem.PickSet, error) {
+	sql := `SELECT years.year, weeks.week, home.city, home.nickname, away.city, away.nickname, games.date, games.home_score, games.away_score, selection.city, selection.nickname, picks.points, users.first_name, users.last_name, users.email
+		FROM picks
+		JOIN games ON picks.game_id = games.id
+		JOIN teams AS home ON games.home_id = home.id
+		JOIN teams AS away ON games.away_id = away.id
+		JOIN teams AS selection ON picks.selection = selection.id
+		JOIN weeks ON games.week_id = weeks.id
+		JOIN years ON weeks.year_id = years.id
+		JOIN users ON picks.user_id = users.id
+		WHERE picks.selection IS NOT NULL AND users.email LIKE ?1 AND years.year = ?2 AND weeks.week = ?3`
+
+	rows, err := db.Query(sql, username, year, week)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
 	picks := make(nflpickem.PickSet, 0)
 
 	for rows.Next() {
@@ -34,17 +52,16 @@ func processPickResults(rows *sql.Rows) (nflpickem.PickSet, error) {
 }
 
 // SelectedPicks returns the user's selected picks for the given week of the requested NFL season.
-func (db Datastore) SelectedPicks(username string, year int, week int) (nflpickem.PickSet, error) {
-	sql := `SELECT years.year, weeks.week, home.city, home.nickname, away.city, away.nickname, games.date, games.home_score, games.away_score, selection.city, selection.nickname, picks.points, users.first_name, users.last_name, users.email
+func (db Datastore) UnselectedPicks(username string, year int, week int) (nflpickem.PickSet, error) {
+	sql := `SELECT years.year, weeks.week, home.city, home.nickname, away.city, away.nickname, games.date, games.home_score, games.away_score, users.first_name, users.last_name, users.email
 		FROM picks
 		JOIN games ON picks.game_id = games.id
 		JOIN teams AS home ON games.home_id = home.id
 		JOIN teams AS away ON games.away_id = away.id
-		JOIN teams AS selection ON picks.selection_id = selection.id
 		JOIN weeks ON games.week_id = weeks.id
 		JOIN years ON weeks.year_id = years.id
 		JOIN users ON picks.user_id = users.id
-		WHERE picks.selection IS NOT NULL AND users.email = ?1 AND years.year = ?2 AND weeks.week = ?3`
+		WHERE picks.selection IS NULL AND users.email LIKE ?1 AND years.year = ?2 AND weeks.week = ?3`
 
 	rows, err := db.Query(sql, username, year, week)
 	if err != nil {
@@ -52,33 +69,58 @@ func (db Datastore) SelectedPicks(username string, year int, week int) (nflpicke
 	}
 	defer rows.Close()
 
-	return processPickResults(rows)
+	picks := make(nflpickem.PickSet, 0)
+
+	for rows.Next() {
+		var tmp nflpickem.Pick
+		var d int64
+		err := rows.Scan(&tmp.Game.Year, &tmp.Game.Week, &tmp.Game.Home.City, &tmp.Game.Home.Nickname, &tmp.Game.Away.City, &tmp.Game.Away.Nickname, &d, &tmp.Game.HomeScore, &tmp.Game.AwayScore,
+			&tmp.User.FirstName, &tmp.User.LastName, &tmp.User.Email)
+		if err != nil {
+			return nil, err
+		}
+
+		tmp.Game.Date = time.Unix(d, 0)
+
+		picks = append(picks, tmp)
+	}
+
+	return picks, nil
+}
+
+// Picks returns all picks for a given week of the requested NFL season
+func (db Datastore) Picks(year int, week int) (nflpickem.PickSet, error) {
+	selected, err := db.SelectedPicks("%", year, week)
+	if err != nil {
+		return nil, err
+	}
+
+	unselected, err := db.UnselectedPicks("%", year, week)
+	if err != nil {
+		return nil, err
+	}
+
+	return append(selected, unselected...), nil
 }
 
 // Picks returns the given user's picks for the given week of the requested NFL season.
-func (db Datastore) Picks(username string, year int, week int) (nflpickem.PickSet, error) {
-	sql := `SELECT years.year, weeks.week, home.city, home.nickname, away.city, away.nickname, games.date, games.home_score, games.away_score, selection.city, selection.nickname, picks.points, users.first_name, users.last_name, users.email
-		FROM picks
-		JOIN games ON picks.game_id = games.id
-		JOIN teams AS home ON games.home_id = home.id
-		JOIN teams AS away ON games.away_id = away.id
-		JOIN teams AS selection ON picks.selection_id = selection.id
-		JOIN weeks ON games.week_id = weeks.id
-		JOIN years ON weeks.year_id = years.id
-		JOIN users ON picks.user_id = users.id
-		WHERE users.email = ?1 AND years.year = ?2 AND weeks.week = ?3`
-
-	rows, err := db.Query(sql, username, year, week)
+func (db Datastore) UserPicks(username string, year int, week int) (nflpickem.PickSet, error) {
+	selected, err := db.SelectedPicks("%", year, week)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	return processPickResults(rows)
+	unselected, err := db.UnselectedPicks("%", year, week)
+	if err != nil {
+		return nil, err
+	}
+
+	return append(selected, unselected...), nil
 }
 
 // TODO: Implement MakePicks
 func (db Datastore) MakePicks(picks nflpickem.PickSet) error {
+	log.Println(picks)
 	return nil
 }
 
@@ -98,6 +140,16 @@ func (db Datastore) CreatePicks(username string, year int, week int) error {
 	}
 
 	return nil
+}
+
+func updatePick(db Datastore, selection int, points int, id int) error {
+	sql := `UPDATE picks
+	  SET selection = ?1 AND points = ?2
+	  WHERE id = ?3`
+
+	_, err := db.Exec(sql, selection, points, id)
+
+	return err
 }
 
 func gameIds(db Datastore, year int, week int) ([]int, error) {

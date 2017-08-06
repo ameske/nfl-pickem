@@ -61,7 +61,7 @@ func getPicks(user nflpickem.User, db nflpickem.PickRetriever, w http.ResponseWr
 
 	username := r.FormValue("username")
 
-	picks, err := db.Picks(username, year, week)
+	picks, err := db.UserPicks(username, year, week)
 	if err != nil {
 		WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -100,7 +100,7 @@ func postPicks(user nflpickem.User, db pickManager, notifier nflpickem.Notifier,
 		return
 	}
 
-	picks, err := db.Picks(username, year, week)
+	picks, err := db.UserPicks(username, year, week)
 	if err != nil {
 		WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
