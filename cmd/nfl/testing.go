@@ -25,6 +25,9 @@ func init() {
 	setupCommand.Flags().UintVarP(&testWeeks, "weeks", "w", 0, "number of weeks to generate fake data")
 
 	// Randomize pick selections (year/week)
+	generateCommand.AddCommand(generatePicksCommand)
+	generatePicksCommand.Flags().UintVarP(&testWeek, "week", "w", 0, "week to generate game results for")
+	generatePicksCommand.Flags().UintVarP(&testYear, "year", "y", 0, "year to genearate game results for")
 
 	// Randomize game results (year/week)
 	generateCommand.AddCommand(generateResultsCommand)
@@ -75,8 +78,6 @@ var generateResultsCommand = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		log.Println(games)
-
 		// Generate random scores and upate the game
 		for _, g := range games {
 			home := rand.Intn(64)
@@ -92,6 +93,82 @@ var generateResultsCommand = &cobra.Command{
 			}
 		}
 	},
+}
+
+var generatePicksCommand = &cobra.Command{
+	Use:   "picks",
+	Short: "generate fake picks for a db instance",
+	Long:  "generate fake picks for a db instance",
+	Run: func(cmd *cobra.Command, args []string) {
+		if datastore == "" {
+			log.Fatal("db flag is required")
+		}
+
+		if testYear == 0 || testWeek == 0 {
+			log.Fatal("year and week required")
+		}
+
+		db, err := sqlite3.NewDatastore(datastore)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		picks, err := db.Picks(int(testYear), int(testWeek))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		separated := splitPicks(picks)
+
+		rand.Seed(time.Now().Unix())
+
+		points := []int{7, 5, 5, 3, 3, 3, 3, 3}
+
+		for _, picks := range separated {
+			for i, _ := range picks {
+				if rand.Intn(2) == 0 {
+					picks[i].Selection = picks[i].Game.Home
+				} else {
+					picks[i].Selection = picks[i].Game.Away
+				}
+
+				if len(points) != 0 {
+					picks[i].Points = points[0]
+					points = points[1:]
+				} else {
+					picks[i].Points = 1
+				}
+			}
+
+			if verbose {
+				for _, p := range picks {
+					log.Printf("%+v\n", p)
+				}
+			}
+
+			err := db.MakePicks(picks)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	},
+}
+
+func splitPicks(picks nflpickem.PickSet) map[nflpickem.User]nflpickem.PickSet {
+	separated := make(map[nflpickem.User]nflpickem.PickSet)
+
+	for _, p := range picks {
+		var tmp nflpickem.PickSet
+		ok := false
+		if tmp, ok = separated[p.User]; !ok {
+			tmp = make(nflpickem.PickSet, 0)
+		}
+
+		tmp = append(tmp, p)
+		separated[p.User] = tmp
+	}
+
+	return separated
 }
 
 var setupCommand = &cobra.Command{
