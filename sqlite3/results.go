@@ -15,11 +15,11 @@ func (db Datastore) Results(t time.Time, year int, week int) ([]nflpickem.Result
 		JOIN games ON picks.game_id = games.id
 		JOIN teams AS home ON games.home_id = home.id
 		JOIN teams AS away ON games.away_id = away.id
-		JOIN teams AS selection ON picks.selection_id = selection.id
+		JOIN teams AS selection ON picks.selection = selection.id
 		JOIN weeks ON games.week_id = weeks.id
 		JOIN years ON weeks.year_id = years.id
 		JOIN users ON picks.user_id = users.id
-		WHERE picks.selection_id IS NOT NULL AND games.date < ?1 AND years.year = ?2 AND weeks.week = ?3 ORDER BY games.date ASC, games.id ASC, users.email ASC`
+		WHERE picks.selection IS NOT NULL AND games.date < ?1 AND years.year = ?2 AND weeks.week = ?3 ORDER BY games.date ASC, games.id ASC, users.email ASC`
 
 	rows, err := db.Query(sql, t.Unix(), year, week)
 	if err != nil {
