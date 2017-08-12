@@ -7,9 +7,6 @@ import (
 	"github.com/ameske/nfl-pickem"
 )
 
-// ErrGameLocked occurs when a pick's game has already kicked off and cannot be changed
-var ErrGameLocked = errors.New("game is locked")
-
 // SelectedPicks returns the user's selected picks for the given week of the requested NFL season.
 func (db Datastore) SelectedPicks(username string, year int, week int) (nflpickem.PickSet, error) {
 	sql := `SELECT years.year, weeks.week, home.city, home.nickname, away.city, away.nickname, games.date, games.home_score, games.away_score, selection.city, selection.nickname, picks.points, users.first_name, users.last_name, users.email

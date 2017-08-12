@@ -6,9 +6,8 @@ import (
 	"github.com/ameske/nfl-pickem"
 )
 
-// Results returns the set of picks that are visible for all users for the given week of the NFL season.
-//
-// A pick is visible if the game is locked.
+// Results returns the set of picks for the given week of the NFL season that have already started
+// based on the provided date.
 func (db Datastore) Results(t time.Time, year int, week int) ([]nflpickem.Result, error) {
 	sql := `SELECT years.year, weeks.week, home.city, home.nickname, away.city, away.nickname, games.date, games.home_score, games.away_score, selection.city, selection.nickname, picks.points, users.first_name, users.last_name, users.email
 		FROM picks
