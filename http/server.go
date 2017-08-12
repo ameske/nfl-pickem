@@ -6,14 +6,30 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/ameske/nfl-pickem"
 	"github.com/gorilla/securecookie"
 )
 
+// TimeSource is the interface that specifies the ability to provide the current time
+type TimeSource interface {
+	Now() time.Time
+}
+
+// systemTime provides the current time according to the std library
+type systemTime struct{}
+
+func (t systemTime) Now() time.Time {
+	return time.Now()
+}
+
+var DefaultTimesource = systemTime{}
+
 // A Server exposes the NFL Pickem Service over HTTP
 type Server struct {
-	Address string
+	address string
+	time    TimeSource
 	router  *http.ServeMux
 	sc      *securecookie.SecureCookie
 	db      nflpickem.Service
@@ -21,16 +37,18 @@ type Server struct {
 
 // NewServer creates an NFL Pickem Server at the given address, using hashKey and encryptKey for secure cookies,
 // and the given nflpickem.Service for data storage and retrieval.
-func NewServer(address string, hashKey []byte, encryptKey []byte, nflService nflpickem.Service, notifier nflpickem.Notifier) (*Server, error) {
+func NewServer(address string, hashKey []byte, encryptKey []byte, nflService nflpickem.Service, notifier nflpickem.Notifier, t TimeSource) (*Server, error) {
 	sc := securecookie.New(hashKey, encryptKey)
 
 	s := &Server{
-		Address: address,
+		address: address,
 		router:  http.NewServeMux(),
 		sc:      sc,
 		db:      nflService,
+		time:    t,
 	}
 
+	// Required for serialization support in github.com/gorilla/securecookie
 	gob.Register(nflpickem.User{})
 
 	s.router.HandleFunc("/login", s.login)
@@ -38,10 +56,10 @@ func NewServer(address string, hashKey []byte, encryptKey []byte, nflService nfl
 
 	s.router.HandleFunc("/current", currentWeek(nflService))
 	s.router.HandleFunc("/games", games(nflService))
-	s.router.HandleFunc("/results", results(nflService))
+	s.router.HandleFunc("/results", results(nflService, s.time))
 	s.router.HandleFunc("/totals", weeklyTotals(nflService))
 
-	s.router.HandleFunc("/picks", s.requireLogin(picks(nflService, notifier)))
+	s.router.HandleFunc("/picks", s.requireLogin(picks(nflService, notifier, s.time)))
 	s.router.HandleFunc("/password", s.requireLogin(changePassword(nflService)))
 
 	s.router.HandleFunc("/years", years(nflService))
@@ -51,8 +69,8 @@ func NewServer(address string, hashKey []byte, encryptKey []byte, nflService nfl
 
 // Start starts the NFL Pickem Server
 func (s *Server) Start() error {
-	log.Printf("NFL Pick-Em Pool listening on %s", s.Address)
-	return http.ListenAndServe(s.Address, s.router)
+	log.Printf("NFL Pick-Em Pool listening on %s", s.address)
+	return http.ListenAndServe(s.address, s.router)
 }
 
 // login logs a user into the NFL Pickem server, providing a secure cookie that can

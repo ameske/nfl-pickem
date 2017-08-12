@@ -9,6 +9,7 @@ import (
 	"log"
 	"log/syslog"
 	"os"
+	"time"
 
 	nflpickem "github.com/ameske/nfl-pickem"
 	"github.com/ameske/nfl-pickem/http"
@@ -79,12 +80,13 @@ func setupNotifier(c config) (n nflpickem.Notifier, err error) {
 }
 
 func main() {
-	var dbFile, configFile string
+	var dbFile, configFile, timeStr string
 	var stdout bool
 
 	flag.StringVar(&configFile, "config", "/opt/ameske/gonfl/conf.json", "Path to server config file")
 	flag.StringVar(&dbFile, "db", "", "override the configuration file's databsae location")
 	flag.BoolVar(&stdout, "stdout", false, "log to the console instead of syslog")
+	flag.StringVar(&timeStr, "time", "", "override the current internal time of the server (use 'unix date' format)")
 
 	flag.Parse()
 
@@ -127,10 +129,39 @@ func main() {
 		log.Fatal(err)
 	}
 
-	server, err := http.NewServer("0.0.0.0:61389", hashKey, encryptKey, db, notifier)
+	var timeSource http.TimeSource
+	if timeStr != "" {
+		t, err := time.Parse(time.UnixDate, timeStr)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		timeSource = NewCustomTime(t)
+	} else {
+		timeSource = http.DefaultTimesource
+	}
+
+	server, err := http.NewServer("0.0.0.0:61389", hashKey, encryptKey, db, notifier, timeSource)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	log.Fatal(server.Start())
+}
+
+// customTime implements the TimeSource interface provided by package HTTP
+type customTime struct {
+	now time.Time
+}
+
+// NewCustomTime constructs a time source that always uses the provided time as "now"
+func NewCustomTime(t time.Time) customTime {
+	return customTime{
+		now: t,
+	}
+}
+
+// Now returns the static time the customTime was created with
+func (ct customTime) Now() time.Time {
+	return ct.now
 }

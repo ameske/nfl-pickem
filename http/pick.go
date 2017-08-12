@@ -22,7 +22,7 @@ type pickManager interface {
 // URL Parameters:
 //	year: Specifies the current year, Required
 //	week: Specifies the current week, Required
-func picks(db pickManager, notifier nflpickem.Notifier) http.HandlerFunc {
+func picks(db pickManager, notifier nflpickem.Notifier, t TimeSource) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := retrieveUser(r.Context())
 		if err == errNoUser {
@@ -36,7 +36,7 @@ func picks(db pickManager, notifier nflpickem.Notifier) http.HandlerFunc {
 		if r.Method == "GET" {
 			getPicks(user, db, w, r)
 		} else if r.Method == "POST" {
-			postPicks(user, db, notifier, w, r)
+			postPicks(user, db, notifier, t, w, r)
 		} else {
 			WriteJSONError(w, http.StatusMethodNotAllowed, "only GET or POST allowed")
 		}
@@ -79,7 +79,7 @@ func getPicks(user nflpickem.User, db nflpickem.PickRetriever, w http.ResponseWr
 // declared in the URL.
 //
 // If a selection is made for a locked game, it will be ignored.
-func postPicks(user nflpickem.User, db pickManager, notifier nflpickem.Notifier, w http.ResponseWriter, r *http.Request) {
+func postPicks(user nflpickem.User, db pickManager, notifier nflpickem.Notifier, t TimeSource, w http.ResponseWriter, r *http.Request) {
 	yearStr := r.FormValue("year")
 	year, err := strconv.Atoi(yearStr)
 	if err != nil {
