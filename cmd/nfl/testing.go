@@ -122,9 +122,8 @@ var generatePicksCommand = &cobra.Command{
 
 		rand.Seed(time.Now().Unix())
 
-		points := []int{7, 5, 5, 3, 3, 3, 3, 3}
-
 		for _, picks := range separated {
+			points := []int{7, 5, 5, 3, 3, 3, 3, 3}
 			for i, _ := range picks {
 				if rand.Intn(2) == 0 {
 					picks[i].Selection = picks[i].Game.Home
