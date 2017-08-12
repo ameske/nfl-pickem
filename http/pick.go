@@ -113,9 +113,10 @@ func postPicks(user nflpickem.User, db pickManager, notifier nflpickem.Notifier,
 		return
 	}
 
-	// Drop any games that have already started
+	// Drop any games that have already started from the submitted set
+	// so that the original pick isn't updated
 	selections = selections.Filter(func(p nflpickem.Pick) bool {
-		return p.Game.Date.After(time.Now())
+		return time.Now().After(p.Game.Date)
 	})
 
 	err = picks.Merge(selections)
