@@ -1,7 +1,6 @@
 package http
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 
@@ -26,8 +25,6 @@ func results(db nflpickem.ResultFetcher, t TimeSource) http.HandlerFunc {
 			WriteJSONError(w, http.StatusBadRequest, "week query parameter must be integer")
 			return
 		}
-
-		log.Println("Using time: %+v", t.Now())
 
 		results, err := db.Results(t.Now(), year, week)
 		if err != nil {
