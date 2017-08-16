@@ -5,8 +5,6 @@ document.addEventListener("DOMContentLoaded", function() {
   createYearsWeeksPaginationBar(years, weeks, loadStandings);
 });
 
-var gamesCache = [];
-
 function loadStandings(year, week) {
   var request = new XMLHttpRequest();
   request.open("GET", "http://localhost:61389/totals?year=" + year + "&week=" + week + "&kind=cumulative", true);
