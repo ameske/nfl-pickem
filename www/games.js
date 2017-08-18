@@ -54,19 +54,19 @@ function renderGamesTable(games) {
   for (let g of games) {
     var row = table.insertRow(table.rows.length);
 
-    var cell = row.insertCell(0);
+    var cell = row.insertCell(row.cells.length);
     cell.innerHTML = g.date;
 
-    cell = row.insertCell(1);
+    cell = row.insertCell(row.cells.length);
     cell.innerHTML = g.away.city + " " + g.away.nickname;
 
-    cell = row.insertCell(2);
+    cell = row.insertCell(row.cells.length);
     cell.innerHTML = g.awayScore;
 
-    cell = row.insertCell(3);
+    cell = row.insertCell(row.cells.length);
     cell.innerHTML = g.home.city + " " + g.home.nickname;
 
-    cell = row.insertCell(4);
+    cell = row.insertCell(row.cells.length);
     cell.innerHTML = g.homeScore;
   }
 }
