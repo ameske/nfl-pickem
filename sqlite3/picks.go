@@ -101,12 +101,12 @@ func (db Datastore) Picks(year int, week int) (nflpickem.PickSet, error) {
 
 // Picks returns the given user's picks for the given week of the requested NFL season.
 func (db Datastore) UserPicks(username string, year int, week int) (nflpickem.PickSet, error) {
-	selected, err := db.SelectedPicks("%", year, week)
+	selected, err := db.SelectedPicks(username, year, week)
 	if err != nil {
 		return nil, err
 	}
 
-	unselected, err := db.UnselectedPicks("%", year, week)
+	unselected, err := db.UnselectedPicks(username, year, week)
 	if err != nil {
 		return nil, err
 	}
