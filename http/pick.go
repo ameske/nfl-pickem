@@ -135,11 +135,12 @@ func postPicks(user nflpickem.User, db pickManager, notifier nflpickem.Notifier,
 		return
 	}
 
-	err = notifier.Notify(username, week, picks)
-	if err != nil {
-		log.Printf("unable to notify user of picks: %v", err)
-		return
-	}
+	go func() {
+		err = notifier.Notify(username, week, picks)
+		if err != nil {
+			log.Printf("unable to notify user of picks: %v", err)
+		}
+	}()
 
 	WriteJSON(w, picks)
 }
