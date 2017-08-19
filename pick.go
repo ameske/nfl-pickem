@@ -93,7 +93,7 @@ func (picks PickSet) Merge(other PickSet) error {
 		originalFound := false
 		for _, p := range picks {
 			if o.Equal(p) {
-				picks[i] = p
+				picks[i] = o
 				originalFound = true
 				break
 			}
