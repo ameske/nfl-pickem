@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/ameske/nfl-pickem"
 )
@@ -116,7 +115,7 @@ func postPicks(user nflpickem.User, db pickManager, notifier nflpickem.Notifier,
 	// Drop any games that have already started from the submitted set
 	// so that the original pick isn't updated
 	selections = selections.Filter(func(p nflpickem.Pick) bool {
-		return time.Now().After(p.Game.Date)
+		return p.Game.Date.After(t.Now())
 	})
 
 	err = picks.Merge(selections)
