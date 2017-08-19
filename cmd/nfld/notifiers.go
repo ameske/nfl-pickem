@@ -101,7 +101,7 @@ Here are the picks that I currently have recorded in my system for Week {{.Week}
 Please double-check and make sure there are no errors. E-mail me if you find any problems.
 
 {{range .Picks}}
-{{.AwayNickname}}/{{.HomeNick}} - {{if eq .Selection 1}}{{.AwayNickname}}{{else}}{{.HomeNickname}}{{end}} {{.Points}}
+{{.Game.Home.Nickname}}/{{.Game.Away.Nickname}} - {{.Selection.Nickname}} ({{.Points}})
 {{end}}
 
 Good luck!
