@@ -77,20 +77,20 @@ function render(weekTotals) {
   
   var row = table.insertRow(table.rows.length);
   var cell = row.insertCell(row.cells.length);
-  cell.innerHTML = "Name";
+  cell.appendChild(document.createTextNode("Name"));
 
   for (var i=0; i < standings[0].totals.length; i++) {
     var cell = row.insertCell(row.cells.length);
-    cell.innerHTML = i+1;
+    cell.appendChild(document.createTextNode(i+1));
   }
 
     cell = row.insertCell(row.cells.length);
 
   cell = row.insertCell(row.cells.length);
-  cell.innerHTML = "Raw Total";
+  cell.appendChild(document.createTextNode("Raw Total"));
 
   cell = row.insertCell(row.cells.length);
-  cell.innerHTML = "Adjusted Total";
+  cell.appendChild(document.createTextNode("Adjusted Total"));
 
   // Move to the tbody
   table = document.getElementById("standings").getElementsByTagName("tbody")[0];
@@ -99,23 +99,23 @@ function render(weekTotals) {
     var row = table.insertRow(table.rows.length);
 
     var cell = row.insertCell(row.cells.length);
-    cell.innerHTML = s.name;
+    cell.appendChild(document.createTextNode(s.name));
 
     for (var i=0; i < s.totals.length; i++) {
       var cell = row.insertCell(row.cells.length);
-      cell.innerHTML = s.totals[i];
+      cell.appendChild(document.createTextNode(s.totals[i]));
     }
 
     cell = row.insertCell(row.cells.length);
 
     cell = row.insertCell(row.cells.length);
-    cell.innerHTML = totalPoints(s.totals);
+    cell.appendChild(document.createTextNode(s.totals));
 
     cell = row.insertCell(row.cells.length);
     if (s.totals.length > 1) {
-      cell.innerHTML = adjustedTotalPoint(s.totals);
+      cell.appendChild(document.createTextNode(adjustedTotalPoints(s.totals)));
     } else {
-      cell.innerHTML = totalPoints(s.totals);
+      cell.appendChild(document.createTextNode(totalPoints(s.totals)));
     }
   }
 }
