@@ -1,4 +1,8 @@
+var currentUser = null;
+
 $(document).ready(function() {
+  currentUser = state();
+  configureNavbar(currentUser != null);
   loadCurrentStandings();
 });
 

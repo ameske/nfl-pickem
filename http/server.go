@@ -54,6 +54,7 @@ func NewServer(address string, routePrefix string, hashKey []byte, encryptKey []
 
 	s.router.HandleFunc(fmt.Sprintf("%s/login", routePrefix), s.login)
 	s.router.HandleFunc(fmt.Sprintf("%s/logout", routePrefix), s.logout)
+	s.router.HandleFunc(fmt.Sprintf("%s/state", routePrefix), s.loginState)
 
 	s.router.HandleFunc(fmt.Sprintf("%s/current", routePrefix), currentWeek(nflService))
 	s.router.HandleFunc(fmt.Sprintf("%s/games", routePrefix), games(nflService))
@@ -112,8 +113,7 @@ func (s *Server) newEncodedCookie(name string, value interface{}) (*http.Cookie,
 	return &http.Cookie{
 		Name:     name,
 		Value:    encoded,
-		Path:     "/",
-		Secure:   true,
+		Secure:   false,
 		HttpOnly: true,
 	}, nil
 }
@@ -151,6 +151,31 @@ func (s *Server) requireLogin(next http.HandlerFunc) http.HandlerFunc {
 
 		next(w, r.WithContext(ctx))
 	}
+}
+
+func (s *Server) loginState(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("nflpickem")
+	if err != nil {
+		WriteJSONError(w, http.StatusUnauthorized, "login required")
+		return
+	}
+
+	user := nflpickem.User{}
+	err = s.sc.Decode("nflpickem", cookie.Value, &user)
+	if err != nil {
+		WriteJSONError(w, http.StatusUnauthorized, "login required")
+		return
+	}
+
+	state := struct {
+		Name     string
+		Username string
+	}{
+		user.FirstName,
+		user.Email,
+	}
+
+	WriteJSON(w, state)
 }
 
 var errNoUser = errors.New("no user information stored in context")

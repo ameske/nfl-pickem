@@ -124,3 +124,74 @@ function createYearsWeeksPaginationBar(yearRoot, weekRoot, onClick) {
   request.send();
 
 }
+
+// Configures the navbar based on the current login state.
+function configureNavbar(isLoggedIn) {
+  let navbar = document.getElementById("navright");
+  if (isLoggedIn) {
+    // Redirect to picks (for now) if we tried to access login
+    if (window.location.pathname == "/login.html") {
+      window.location.assign("/picks.html");
+      return;
+    }
+
+    // Remove login
+    for (var li of navbar.childNodes) {
+      if (li.id == "navlogin") {
+        navbar.removeChild(li);
+      }
+    }
+  } else {
+    // Redirect to login if we tried to access picks
+    if (window.location.pathname == "/picks.html") {
+      window.location.assign("/login.html");
+      return;
+    }
+    // Remove picks and logout
+    for (var li of navbar.childNodes) {
+      if (li.id == "navpicks") {
+        navbar.removeChild(li);
+      }
+      if (li.id == "navlogout") {
+        navbar.removeChild(li);
+      }
+    }
+  }
+}
+
+function state() {
+  let request = new XMLHttpRequest();
+  request.open("GET", "/api/state", false);
+  request.withCredentials = true;
+
+  request.send();
+  if (request.status == 200) {
+    let response = request.response;
+    user = JSON.parse(response);
+    return user;
+  }
+
+  return null;
+}
+
+// Login to the nfl-pickem backend API. Requires two DOM elements
+// "username", and "password" that contain the username and password.
+function login() {
+  let username = document.getElementById("username").value
+    let password = document.getElementById("password").value
+
+    request = new XMLHttpRequest()
+    request.open("POST", "/api/login", false);
+  request.withCredentials = true;
+  request.setRequestHeader("Authorization", "Basic " + btoa(username+":"+password));
+
+  request.onload = function() {
+    if (this.status <= 200 && this.status < 400) {
+      alert("Logged in succesfully!");
+    } else {
+      alert("Didn't work!");
+    }
+  };
+
+  request.send()
+}

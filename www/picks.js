@@ -1,4 +1,11 @@
+// Keep track of the current user
+var currentUser = null;
+
 document.addEventListener("DOMContentLoaded", function() {
+  currentUser = state();
+
+  configureNavbar(currentUser != null);
+
   years = document.getElementById("yearselector");
   weeks = document.getElementById("weekselector");
 
@@ -49,9 +56,8 @@ function submitPicks() {
   let week = currentlySelectedElementValue(weeks);
 
   let request = new XMLHttpRequest();
-  request.open("POST", "http://localhost:61389/picks?year="+year+"&week="+week+"&username=alice@gmail.com", true);
+  request.open("POST", "/api/picks?year="+year+"&week="+week+"&username=" + currentUser.Username, true);
   request.withCredentials = true;
-  request.setRequestHeader("Authorization", "Basic " + btoa("alice@gmail.com:password"));
   request.setRequestHeader("Content-Type", "application/json");
 
   request.onload = function() {
@@ -103,9 +109,8 @@ function isValid(picks) {
 //    week - NFL schedule week
 function loadPicks(year, week) {
   var request = new XMLHttpRequest();
-  request.open("GET", "http://localhost:61389/picks?year="+year+"&week="+week+"&username=alice@gmail.com", true);
+  request.open("GET", "/api/picks?year="+year+"&week="+week+"&username=" + currentUser.Username, true);
   request.withCredentials = true;
-  request.setRequestHeader("Authorization", "Basic " + btoa("alice@gmail.com:password"));
 
   request.onload = function() {
     if (this.status >= 200 && this.status < 400) {
