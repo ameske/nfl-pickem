@@ -141,7 +141,8 @@ func main() {
 		timeSource = http.DefaultTimesource
 	}
 
-	server, err := http.NewServer("0.0.0.0:61389", hashKey, encryptKey, db, notifier, timeSource)
+	prefix := "/api"
+	server, err := http.NewServer("0.0.0.0:61389", prefix, hashKey, encryptKey, db, notifier, timeSource)
 	if err != nil {
 		log.Fatal(err)
 	}

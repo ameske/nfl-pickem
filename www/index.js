@@ -3,7 +3,7 @@ $(document).ready(function() {
 });
 
 function loadCurrentStandings() {
-  $.getJSON("http://localhost:61389/totals?type=cumulative&year=" + currentYear + "&week=" + currentWeek, function(totals) {
+  $.getJSON("/api/totals?type=cumulative&year=" + currentYear + "&week=" + currentWeek, function(totals) {
           console.log(totals);
           standings = makeStandings(totals);
 

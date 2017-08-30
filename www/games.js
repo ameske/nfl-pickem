@@ -22,7 +22,7 @@ function loadGames(year, week) {
   }
 
   var request = new XMLHttpRequest();
-  request.open("GET", "http://localhost:61389/games?year="+year+"&week="+week, true);
+  request.open("GET", "/api/games?year="+year+"&week="+week, true);
 
   request.onload = function() {
     if (this.status >= 200 && this.status < 400) {

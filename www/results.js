@@ -22,7 +22,7 @@ function loadResults(year, week) {
   }
 
   var request = new XMLHttpRequest();
-  request.open("GET", "http://localhost:61389/results?year=" + year + "&week=" + week, true);
+  request.open("GET", "/api/results?year=" + year + "&week=" + week, true);
 
   request.onload = function() {
     if (this.status >= 200 && this.status < 400) {

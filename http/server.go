@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/gob"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -37,7 +38,7 @@ type Server struct {
 
 // NewServer creates an NFL Pickem Server at the given address, using hashKey and encryptKey for secure cookies,
 // and the given nflpickem.Service for data storage and retrieval.
-func NewServer(address string, hashKey []byte, encryptKey []byte, nflService nflpickem.Service, notifier nflpickem.Notifier, t TimeSource) (*Server, error) {
+func NewServer(address string, routePrefix string, hashKey []byte, encryptKey []byte, nflService nflpickem.Service, notifier nflpickem.Notifier, t TimeSource) (*Server, error) {
 	sc := securecookie.New(hashKey, encryptKey)
 
 	s := &Server{
@@ -51,18 +52,18 @@ func NewServer(address string, hashKey []byte, encryptKey []byte, nflService nfl
 	// Required for serialization support in github.com/gorilla/securecookie
 	gob.Register(nflpickem.User{})
 
-	s.router.HandleFunc("/login", s.login)
-	s.router.HandleFunc("/logout", s.logout)
+	s.router.HandleFunc(fmt.Sprintf("%s/login", routePrefix), s.login)
+	s.router.HandleFunc(fmt.Sprintf("%s/logout", routePrefix), s.logout)
 
-	s.router.HandleFunc("/current", currentWeek(nflService))
-	s.router.HandleFunc("/games", games(nflService))
-	s.router.HandleFunc("/results", results(nflService, s.time))
-	s.router.HandleFunc("/totals", weeklyTotals(nflService))
+	s.router.HandleFunc(fmt.Sprintf("%s/current", routePrefix), currentWeek(nflService))
+	s.router.HandleFunc(fmt.Sprintf("%s/games", routePrefix), games(nflService))
+	s.router.HandleFunc(fmt.Sprintf("%s/results", routePrefix), results(nflService, s.time))
+	s.router.HandleFunc(fmt.Sprintf("%s/totals", routePrefix), weeklyTotals(nflService))
 
-	s.router.HandleFunc("/picks", s.requireLogin(picks(nflService, notifier, s.time)))
-	s.router.HandleFunc("/password", s.requireLogin(changePassword(nflService)))
+	s.router.HandleFunc(fmt.Sprintf("%s/picks", routePrefix), s.requireLogin(picks(nflService, notifier, s.time)))
+	s.router.HandleFunc(fmt.Sprintf("%s/password", routePrefix), s.requireLogin(changePassword(nflService)))
 
-	s.router.HandleFunc("/years", years(nflService))
+	s.router.HandleFunc(fmt.Sprintf("%s/years", routePrefix), years(nflService))
 
 	return s, nil
 }

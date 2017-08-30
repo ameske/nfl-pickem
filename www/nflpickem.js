@@ -72,7 +72,7 @@ function unselectAll(root) {
 //      onClick - a function of the form f(year, week) -> f() that will be called when a week is clicked
 function createYearsWeeksPaginationBar(yearRoot, weekRoot, onClick) {
   var request = new XMLHttpRequest();
-  request.open("GET", "http://localhost:61389/years", true);
+  request.open("GET", "/api/years", true);
 
   request.onload = function() {
     if (this.status >= 200 && this.status < 400) {

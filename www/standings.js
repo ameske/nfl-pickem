@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 function loadStandings(year, week) {
   var request = new XMLHttpRequest();
-  request.open("GET", "http://localhost:61389/totals?year=" + year + "&week=" + week + "&kind=cumulative", true);
+  request.open("GET", "/api/totals?year=" + year + "&week=" + week + "&kind=cumulative", true);
 
   request.onload = function() {
     if (this.status >= 200 && this.status < 400) {
