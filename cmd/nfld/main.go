@@ -23,7 +23,6 @@ type config struct {
 		AuthKey    string `json:"authKey"`
 		EncryptKey string `json:"encryptKey"`
 		Database   string `json:"databaseFile"`
-		LogosDir   string `json:"logosDirectory"`
 		Autoupdate bool   `json:"autoupdateEnabled"`
 	} `json:"server"`
 	Email struct {
