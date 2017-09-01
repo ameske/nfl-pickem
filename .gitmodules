@@ -1,9 +1,6 @@
 [submodule "vendor/github.com/mattn/go-sqlite3"]
 	path = vendor/github.com/mattn/go-sqlite3
 	url = https://github.com/mattn/go-sqlite3.git
-[submodule "vendor/github.com/gorilla/--force"]
-	path = vendor/github.com/gorilla/--force
-	url = https://github.com/gorilla/securecookie.git
 [submodule "vendor/github.com/gorilla/securecookie"]
 	path = vendor/github.com/gorilla/securecookie
 	url = https://github.com/gorilla/securecookie.git
@@ -19,3 +16,6 @@
 [submodule "vendor/golang.org/x/crypto"]
 	path = vendor/golang.org/x/crypto
 	url = https://github.com/golang/crypto
+[submodule "vendor/github.com/spf13/cobra"]
+	path = vendor/github.com/spf13/cobra
+	url = https://github.com/spf13/cobra
