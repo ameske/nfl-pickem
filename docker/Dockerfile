@@ -54,12 +54,6 @@ COPY docker/Caddyfile /etc/caddy/
 RUN chown www-data:www-data /etc/caddy/Caddyfile && \
     chmod 444 /etc/caddy/Caddyfile
 
-# Set-up the website assets
-COPY www /var/www/nfl/
-COPY logos /var/www/nfl/
-RUN chown -R www-data:www-data /var/www/nfl && \
-    chmod -R 555 /var/www/nfl
-
 # Copy the supervisord artifacts
 RUN mkdir -p /var/log/supervisor
 COPY docker/supervisord.conf /etc/supervisor/supervisord.conf
@@ -69,6 +63,12 @@ COPY docker/nfld.conf /etc/supervisor/conf.d/nfld.conf
 COPY --from=builder /go/src/nfld /usr/local/bin
 COPY debug.config /nfl-pickem/nfld.conf
 COPY faketest.db /nfl-pickem/nfl.db
+
+# Set-up the website assets
+COPY www /var/www/nfl/
+COPY logos /var/www/nfl/
+RUN chown -R www-data:www-data /var/www/nfl && \
+    chmod -R 555 /var/www/nfl
 
 EXPOSE 80
 
