@@ -1,0 +1,5 @@
+http://localhost {
+  tls off
+  root /var/www/nfl
+  proxy /api localhost:61389 
+}
