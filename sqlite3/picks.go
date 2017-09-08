@@ -133,7 +133,7 @@ func (db Datastore) MakePicks(picks nflpickem.PickSet) error {
 func (db Datastore) CreatePicks(username string, year int, week int) error {
 	games, err := gameIds(db, year, week)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	sql := `INSERT INTO picks(user_id, game_id) VALUES((SELECT id FROM users WHERE email = ?1), ?2)`

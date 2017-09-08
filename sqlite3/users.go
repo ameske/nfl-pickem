@@ -48,3 +48,24 @@ func (db Datastore) AddUser(first string, last string, email string, password st
 
 	return err
 }
+
+func (db Datastore) Users() ([]string, error) {
+	rows, err := db.Query("SELECT email FROM users")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []string
+
+	for rows.Next() {
+		var tmp string
+		err := rows.Scan(&tmp)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, tmp)
+	}
+
+	return users, nil
+}

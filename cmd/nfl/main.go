@@ -14,6 +14,7 @@ func main() {
 	var rootCmd = &cobra.Command{Use: "nfl"}
 	rootCmd.AddCommand(ScheduleCmd)
 	rootCmd.AddCommand(TestCmd)
+	rootCmd.AddCommand(CreateCmd)
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 	rootCmd.PersistentFlags().StringVarP(&datastore, "db", "d", "", "path to datastore")
 	rootCmd.Execute()
