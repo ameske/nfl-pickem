@@ -81,7 +81,7 @@ INSERT INTO teams(city, nickname, stadium, abbreviation) VALUES('Tennessee', 'Ti
 INSERT INTO teams(city, nickname, stadium, abbreviation) VALUES('Denver', 'Broncos', 'Mile High Stadium', 'DEN');
 INSERT INTO teams(city, nickname, stadium, abbreviation) VALUES('Kansas City', 'Chiefs', 'Arrowhead Stadium', 'KC');
 INSERT INTO teams(city, nickname, stadium, abbreviation) VALUES('Oakland', 'Raiders', 'O.co Coliseum', 'OAK');
-INSERT INTO teams(city, nickname, stadium, abbreviation) VALUES('San Diego', 'Chargers', 'Qualcomm Stadium', 'SD');
+INSERT INTO teams(city, nickname, stadium, abbreviation) VALUES('Los Angeles', 'Chargers', 'Qualcomm Stadium', 'SD');
 INSERT INTO teams(city, nickname, stadium, abbreviation) VALUES('Dallas', 'Cowboys', 'AT&T Stadium', 'DAL');
 INSERT INTO teams(city, nickname, stadium, abbreviation) VALUES('New York', 'Giants', 'MetLife Stadium', 'NYG');
 INSERT INTO teams(city, nickname, stadium, abbreviation) VALUES('Philadelphia', 'Eagles', 'Lincoln Financial Field', 'PHI');
@@ -95,6 +95,6 @@ INSERT INTO teams(city, nickname, stadium, abbreviation) VALUES('Carolina', 'Pan
 INSERT INTO teams(city, nickname, stadium, abbreviation) VALUES('New Orleans', 'Saints', 'Mercedes-Benz Superdome', 'NO');
 INSERT INTO teams(city, nickname, stadium, abbreviation) VALUES('Tampa Bay', 'Buccaneers', 'Raymond James Stadium', 'TB');
 INSERT INTO teams(city, nickname, stadium, abbreviation) VALUES('Arizona', 'Cardinals', 'University of Phoenix Stadium', 'ARI');
-INSERT INTO teams(city, nickname, stadium, abbreviation) VALUES('Las Angeles', 'Rams', 'Los Angeles Stadium', 'LA');
+INSERT INTO teams(city, nickname, stadium, abbreviation) VALUES('Los Angeles', 'Rams', 'Los Angeles Stadium', 'LA');
 INSERT INTO teams(city, nickname, stadium, abbreviation) VALUES('San Francisco', '49ers', 'Levis Stadium', 'SF');
 INSERT INTO teams(city, nickname, stadium, abbreviation) VALUES('Seattle', 'Seahawks', 'CenturyLink Field', 'SEA');
