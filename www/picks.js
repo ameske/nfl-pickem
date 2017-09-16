@@ -30,8 +30,13 @@ function submitPicks() {
   // the cached version of the JSON. We'll update "selection" and "points" for each.
   for (i=0; i < table.rows.length; i++) {
     let selection = table.rows[i].cells[3].firstChild.value;
-    let points = table.rows[i].cells[4].firstChild.value;
 
+    // Ignore picks that haven't been made that have locked (they will be empty)
+    if (selection == "" || selection == null) {
+      continue;
+    }
+
+    let points = table.rows[i].cells[4].firstChild.value;
     let split = selection.split(' ');
 
     if (split.length == 2) {
