@@ -178,10 +178,10 @@ function state() {
 // "username", and "password" that contain the username and password.
 function login() {
   let username = document.getElementById("username").value
-    let password = document.getElementById("password").value
+  let password = document.getElementById("password").value
 
-    request = new XMLHttpRequest()
-    request.open("POST", "/api/login", false);
+  request = new XMLHttpRequest()
+  request.open("POST", "/api/login", false);
   request.withCredentials = true;
   request.setRequestHeader("Authorization", "Basic " + btoa(username+":"+password));
 
