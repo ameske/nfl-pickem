@@ -17,6 +17,7 @@ COPY sqlite3 github.com/ameske/nfl-pickem/sqlite3
 COPY vendor github.com/ameske/nfl-pickem/vendor/
 
 RUN go build github.com/ameske/nfl-pickem/cmd/nfld 
+RUN go build github.com/ameske/nfl-pickem/cmd/nfl
 
 
 #***********************************************************************
@@ -30,7 +31,7 @@ LABEL description="nfl-pickem daemon served over caddy"
 
 RUN apt-get update && apt-get install -y curl libcap2-bin supervisor && rm -rf /var/lib/apt/lists/*
 
-# Install the caddy webserver & setup the web asset directory
+# Install and setup all needed directories
 RUN mkdir /caddy_install && \
     curl https://caddyserver.com/download/linux/amd64 > /caddy_install/caddy_server.tar.gz && \
     tar xzf /caddy_install/caddy_server.tar.gz -C /caddy_install && \
@@ -47,26 +48,27 @@ RUN mkdir /caddy_install && \
     mkdir /var/www && \
     chown www-data:www-data /var/www && \
     chmod 555 /var/www && \
-    mkdir /var/www/nfl
+    mkdir /var/www/nfl && \
+    mkdir -p /home/caddy && \
+    chown -R www-data:www-data /home/caddy && \
+    mkdir -p /var/log/supervisor
 
-# Setup the Caddyfile
+# Setup caddy
 COPY docker/Caddyfile /etc/caddy/
 RUN chown www-data:www-data /etc/caddy/Caddyfile && \
     chmod 444 /etc/caddy/Caddyfile
 
-# Copy the supervisord artifacts
-RUN mkdir -p /var/log/supervisor
+# Setup supervisord
 COPY docker/supervisord.conf /etc/supervisor/supervisord.conf
 COPY docker/nfld.conf /etc/supervisor/conf.d/nfld.conf
 
-# Install the nfl-pickem daemon
-COPY --from=builder /go/src/nfld /usr/local/bin
 COPY debug.config /nfl-pickem/nfld.conf
-COPY faketest.db /nfl-pickem/nfl.db
-
-# Set-up the website assets
-COPY www /var/www/nfl/
 COPY logos /var/www/nfl/
+COPY --from=builder /go/src/nfld /usr/local/bin
+COPY --from=builder /go/src/nfl /usr/local/bin
+COPY www /var/www/nfl/
+
+# Set permissions on all website assets
 RUN chown -R www-data:www-data /var/www/nfl && \
     chmod -R 555 /var/www/nfl
 

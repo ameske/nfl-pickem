@@ -1,5 +1,4 @@
-http://localhost {
-  tls off
+nfl.ameske.org {
   root /var/www/nfl
   proxy /api localhost:61389 
 }
